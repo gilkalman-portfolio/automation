@@ -1,0 +1,29 @@
+# Flexible requirements for CI / MCP / AI
+# --------------------------------------
+# Notes:
+# - Ranges keep you forward-compatible while avoiding major breaking changes.
+# - Install Playwright browsers after deps:  `python -m playwright install`
+# - Pin only if your CI reveals incompatibilities; otherwise keep ranges.
+
+# Core test stack
+pytest>=8.2,<9
+pytest-xdist>=3.5,<4
+pytest-rerunfailures>=12,<13
+
+# Playwright
+playwright>=1.45,<2
+pytest-playwright>=0.5,<1
+
+# Reporting
+allure-pytest>=2.13,<3
+pytest-json-report>=1.5,<2
+pytest-reportlog>=0.4,<1
+
+# Utilities
+requests>=2.31,<3
+python-dotenv>=1.0,<2
+pillow>=10,<12
+typing-extensions>=4.8,<5
+
+# Windows-only terminal colors (safe no-op elsewhere)
+colorama>=0.4,<1; platform_system == "Windows"

@@ -1,0 +1,25 @@
+<config>
+  <run>
+    <enabled>true</enabled>
+    <env>stg</env>                          <!-- stg | prod | dev -->
+    <baseUrl>auto</baseUrl>                 <!-- "auto" = resolve from <environments> by <env> -->
+    <headless>false</headless>               <!-- true for CI by default; locally you can override -->
+    <browsers>chromium,firefox</browsers>           <!-- comma separated: chromium,firefox,webkit -->
+    <devices>desktop</devices>              <!-- desktop or a Playwright preset like "Pixel 7","iPhone 14" -->
+    <tags>smoke,regression</tags>           <!-- optional; can be used with -m filtering -->
+    <workers>2</workers>                    <!-- xdist workers (parallel) -->
+    <retries>1</retries>                    <!-- test retries -->
+    <trace>retain-on-failure</trace>        <!-- off|on|retain-on-failure -->
+    <video>off</video>                      <!-- off|on|retain-on-failure -->
+    <screenshot>only-on-failure</screenshot><!-- off|on|only-on-failure -->
+  </run>
+
+  <environments>
+    <stg  baseUrl="https://www.saucedemo.com/"/>
+    <prod baseUrl="https://example.com"/>
+  </environments>
+
+  <credentials>
+    <admin user="admin@example.com" pass="secret123"/>
+  </credentials>
+</config>

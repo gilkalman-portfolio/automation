@@ -1,0 +1,11 @@
+# Playwright
+playwright-report/
+test-results/
+playwright/.cache/
+**/traces/
+**/videos/
+**/screenshots/
+
+# Allure
+allure-results/
+allure-report/
