@@ -9,3 +9,5 @@ playwright/.cache/
 # Allure
 allure-results/
 allure-report/
+
+.idea/
