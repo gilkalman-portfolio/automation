@@ -31,13 +31,19 @@ Project Structure
 │  └─ manage_pages.py       # Central Page Objects manager
 │
 ├─ page_objects/
-│  └─ login_page.py         # Example POM
+│  ├─ login_page.py         # Login POM
+│  ├─ inventory_page.py     # Products page POM
+│  ├─ cart_page.py          # Cart page POM
+│  └─ checkout_page.py      # Checkout (step 1, 2, complete) POM
 │
 ├─ workflows/
-│  └─ web_workflow.py       # UI workflows (login, etc.)
+│  ├─ web_workflow.py       # UI workflows (login, cart, checkout, etc.)
+│  └─ api_workflow.py       # API workflows
 │
-├─ tests/
-│  └─ test_login.py         # Example tests
+├─ test_cases/
+│  ├─ test_login.py         # Login tests
+│  ├─ test_saucedemo.py     # Full Saucedemo E2E test suite (20 tests)
+│  └─ test_api.py           # API tests
 │
 ├─ conftest.py              # All fixtures & integration logic
 ├─ requirements.txt
@@ -93,10 +99,10 @@ XML configuration system
 Workflows layer
 Allure integration
 AI Agent (MCP) compatibility
-Coming next
+Full Saucedemo E2E test suite (20 tests across Login, Products, Cart, Checkout, Navigation)
 API testing module
+Coming next
 DB testing module
-Richer workflows
 CI pipelines
 Contact
 Author: Gil Kalman Role: QA Engineer – Automation & Manual
