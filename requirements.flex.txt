@@ -25,5 +25,9 @@ python-dotenv>=1.0,<2
 pillow>=10,<12
 typing-extensions>=4.8,<5
 
+# Automated test-runner agent
+claude-agent-sdk>=0.1
+anyio>=4.0
+
 # Windows-only terminal colors (safe no-op elsewhere)
 colorama>=0.4,<1; platform_system == "Windows"
