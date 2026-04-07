@@ -1,10 +1,11 @@
 # Automation Testing Framework
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/)
 [![Playwright](https://img.shields.io/badge/Playwright-Latest-green.svg)](https://playwright.dev/)
 [![Pytest](https://img.shields.io/badge/Pytest-Latest-orange.svg)](https://pytest.org/)
+[![GitHub Actions](https://img.shields.io/badge/CI-GitHub_Actions-2088FF.svg)](https://github.com/features/actions)
 
-A **production-ready automation framework** showcasing clean, modular code with AI-powered testing capabilities and dynamic configuration management.
+A **production-ready automation framework** with AI-powered test maintenance, scheduled CI runs, and Telegram notifications.
 
 ---
 
@@ -14,10 +15,11 @@ A **production-ready automation framework** showcasing clean, modular code with 
 - [Key Features](#key-features)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
-- [Architecture](#architecture)
 - [Getting Started](#getting-started)
 - [Configuration](#configuration)
 - [Usage](#usage)
+- [Automated Test Runner](#automated-test-runner)
+- [CI/CD — GitHub Actions](#cicd--github-actions)
 
 ---
 
@@ -25,38 +27,36 @@ A **production-ready automation framework** showcasing clean, modular code with 
 
 This project demonstrates **professional-grade automation testing** with:
 
-- **Clean, production-style code** with separation of concerns
-- **Dynamic framework behavior** per project using a single codebase
-- **XML-based configuration** for flexible test management
-- **AI Agent (MCP)** integration for intelligent automation
-- **Page Object Model** with centralized page management
-- **Comprehensive reporting** with Allure
+- **Clean, production-style code** with Page Object Model + Workflows separation
+- **XML-based configuration** for flexible, code-free environment management
+- **AI Agent** that automatically analyses and fixes failing tests
+- **Scheduled CI** via GitHub Actions (runs daily, reports to Telegram)
+- **Comprehensive reporting** with Allure + Markdown reports
 
 ---
 
 ## Key Features
 
 ### Dynamic Configuration
-- XML-based configuration (`data.xml`)
-- Environment variables (TEST_ENV, TEST_HEADLESS, etc.)
-- CLI parameters for runtime flexibility
-- **No code changes needed** to adapt to different projects
+- XML-based configuration (`data.xml`) — browser, environment, headless, retries, etc.
+- CLI parameter overrides at runtime
+- No code changes needed to adapt to different environments
 
-### AI Integration
-- **MCP Agent** support (JetBrains / Playwright / Pytest)
-- Intelligent test automation capabilities
-- Enhanced debugging and analysis
+### AI-Powered Test Maintenance
+- **Claude Agent SDK** integration (`claude-haiku-4-5`)
+- Automatically reads failing tests, identifies root cause, applies minimal fix
+- Re-runs only the failed tests after fixing to verify
+- Opt-in via `--ai-fix` flag — never runs without explicit permission
+
+### Scheduled CI with Telegram Notifications
+- GitHub Actions workflow runs every day at 02:00 UTC
+- Manual dispatch available from GitHub UI (with marker filter)
+- Sends a summary message + full Markdown report to a Telegram bot
 
 ### Clean Architecture
 - **Page Objects + Workflows** design pattern
 - Centralized page management (`manage_pages.py`)
-- Reusable fixtures and utilities
-- Modular test structure
-
-### Advanced Reporting
-- **Allure** test reports with detailed insights
-- Test execution analytics
-- Failure screenshots and logs
+- Reusable fixtures, utilities, and typed configuration
 
 ---
 
@@ -64,14 +64,15 @@ This project demonstrates **professional-grade automation testing** with:
 
 | Component | Technology |
 |-----------|-----------|
-| **Language** | Python 3.8+ |
+| **Language** | Python 3.12+ |
 | **Test Runner** | Pytest |
 | **Browser Automation** | Playwright |
 | **Test Design** | Page Objects + Workflows |
-| **Config System** | XML (data.xml) + config_loader.py |
-| **Reporting** | Allure |
-| **AI Integration** | MCP Agent (JetBrains / Playwright / Pytest) |
-| **IDE** | JetBrains / PyCharm |
+| **Config System** | XML (`data.xml`) + `config_loader.py` |
+| **Reporting** | Allure + Markdown (`reports/`) |
+| **AI Fix Agent** | Claude Agent SDK (`claude-haiku-4-5`) |
+| **CI/CD** | GitHub Actions (scheduled + manual dispatch) |
+| **Notifications** | Telegram Bot API |
 
 ---
 
@@ -79,83 +80,40 @@ This project demonstrates **professional-grade automation testing** with:
 
 ```
 automation/
+├── automated_test_runner.py     # AI-powered scheduled test runner
+│
+├── .github/
+│   └── workflows/
+│       └── scheduled_test_runner.yml  # GitHub Actions — daily + manual
+│
 ├── configuration/
-│   ├── data.xml                 # Main XML configuration
-│   └── config_loader.py         # Loads & normalizes config
+│   └── data.xml                 # Main config (browser, env, headless…)
 │
 ├── utilities/
-│   └── manage_pages.py          # Central Page Objects manager
+│   ├── config_loader.py         # Loads & normalizes XML config
+│   ├── manage_pages.py          # Central Page Objects manager
+│   └── logger.py
 │
 ├── page_objects/
-│   └── login_page.py            # Example Page Object Model
+│   ├── login_page.py
+│   ├── inventory_page.py
+│   ├── cart_page.py
+│   └── checkout_page.py
 │
 ├── workflows/
-│   └── web_workflow.py          # UI workflows (login, etc.)
+│   ├── web_workflow.py          # UI workflows (login, cart, checkout…)
+│   └── api_workflow.py
 │
-├── tests/
-│   ├── conftest.py              # All fixtures & integration logic
-│   └── test_login.py            # Example tests
+├── test_cases/
+│   ├── conftest.py              # Fixtures, browser setup, trace/screenshot
+│   ├── test_saucedemo.py        # 20 E2E tests (Login, Products, Cart…)
+│   ├── test_login.py
+│   ├── test_web.py
+│   └── test_api.py
 │
-└── requirements.txt             # README.md Configuration (XML + loader)
-```
-
----
-
-## Architecture Overview
-
-### 1. Configuration Layer
-**Dynamic setup** using XML, ENV overrides, and CLI parameters.
-
-```python
-# configuration/data.xml
-<Environment>
-    <TEST_ENV>staging</TEST_ENV>
-    <TEST_HEADLESS>false</TEST_HEADLESS>
-</Environment>
-```
-
-This allows the framework to **adapt to any project** without touching the code.
-
----
-
-### 2. Page Objects Layer
-**Centralized management** of all page objects using `manage_pages.py`.
-
-```python
-# utilities/manage_pages.py
-class PageManager:
-    def __init__(self, page):
-        self.login_page = LoginPage(page)
-        self.dashboard_page = DashboardPage(page)
-        # Add more pages here
-```
-
----
-
-### 3. Workflows Layer
-**Reusable business logic** separated from tests.
-
-```python
-# workflows/web_workflow.py
-def login_workflow(page_manager, username, password):
-    page_manager.login_page.navigate()
-    page_manager.login_page.login(username, password)
-```
-
----
-
-### 4. Tests Layer
-**Clean, readable tests** using fixtures and workflows.
-
-```python
-# tests/test_login.py
-def test_successful_login(page_manager, config):
-    login_workflow(
-        page_manager,
-        config['username'],
-        config['password']
-    )
-    assert page_manager.dashboard_page.is_visible()
+├── reports/                     # Generated Markdown reports
+├── requirements.txt
+└── requirements.flex.txt        # Flexible deps for CI/AI agent
 ```
 
 ---
@@ -163,7 +121,7 @@ def test_successful_login(page_manager, config):
 ## Getting Started
 
 ### Prerequisites
-- Python 3.8+
+- Python 3.12+
 - pip
 
 ### Installation
@@ -174,97 +132,143 @@ git clone https://github.com/gilkalman-portfolio/automation.git
 cd automation
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r requirements.flex.txt
 
 # Install Playwright browsers
-playwright install
+python -m playwright install chromium
+```
+
+### Environment variables (local)
+
+Create a `.env` file in the project root:
+
+```bash
+# .env — never commit this file
+ANTHROPIC_API_KEY=sk-ant-...        # required only for --ai-fix
+TELEGRAM_BOT_TOKEN=123456:ABC...    # required for Telegram notifications
+TELEGRAM_CHAT_ID=-100123456789      # your chat or group ID
 ```
 
 ---
 
 ## Configuration
 
-### Environment Variables
-Set these in your environment or `.env` file:
-
-```bash
-export TEST_ENV=staging          # Environment: staging, production
-export TEST_HEADLESS=false       # Run with visible browser
-export TEST_BROWSER=chromium     # Browser: chromium, firefox, webkit
-```
-
-### XML Configuration
-Edit `configuration/data.xml`:
+Edit `configuration/data.xml` to control runtime behaviour:
 
 ```xml
-<Configuration>
-    <Environment>
-        <TEST_ENV>staging</TEST_ENV>
-        <BASE_URL>https://staging.example.com</BASE_URL>
-    </Environment>
-    <Credentials>
-        <username>test_user</username>
-        <password>test_pass</password>
-    </Credentials>
-</Configuration>
+<config>
+  <run>
+    <env>stg</env>
+    <headless>true</headless>
+    <browsers>chromium</browsers>       <!-- chromium | firefox | webkit -->
+    <retries>1</retries>
+    <trace>retain-on-failure</trace>
+    <screenshot>only-on-failure</screenshot>
+  </run>
+  <environments>
+    <stg baseUrl="https://www.saucedemo.com/"/>
+  </environments>
+</config>
 ```
 
-### CLI Parameters
-Override settings at runtime:
+CLI overrides are also supported:
 
 ```bash
-pytest --env=production --headless=true
+pytest --env=prod --browsers=firefox --headless=true
 ```
 
 ---
 
 ## Usage
 
-### Run All Tests
+### Run all tests
 ```bash
 pytest
 ```
 
-### Run Specific Test File
-```bash
-pytest tests/test_login.py
-```
-
-### Run with Specific Marker
+### Run by marker
 ```bash
 pytest -m smoke
+pytest -m regression
 ```
 
-### Run with Allure Report
+### Run with Allure report
 ```bash
 pytest --alluredir=allure-results
 allure serve allure-results
 ```
 
-### Run in Headless Mode
+---
+
+## Automated Test Runner
+
+`automated_test_runner.py` runs a full cycle:
+
+```
+1. Run pytest → capture JSON + JUnit XML results
+2. If failures + --ai-fix → Claude Agent analyses and fixes
+3. Re-run only the failed tests to verify fixes
+4. Generate Markdown report → reports/report_YYYYMMDD_HHMMSS.md
+5. Send summary + report file to Telegram
+```
+
+### Commands
+
 ```bash
-pytest --headless=true
+# Single run — always works, no API key needed
+python automated_test_runner.py
+
+# Smoke tests only
+python automated_test_runner.py -m smoke
+
+# With AI auto-fix (requires ANTHROPIC_API_KEY)
+python automated_test_runner.py --ai-fix
+
+# Scheduled loop every 24 hours (local)
+python automated_test_runner.py --schedule
+
+# Custom interval
+python automated_test_runner.py --schedule --interval-hours 6
+```
+
+### Report example
+
+```
+# Automated Test Report — 20260407_020315
+
+Status: ✅ ALL PASSING
+Duration: 42.3s
+
+| Metric   | Before | After |
+|----------|--------|-------|
+| ✅ Passed | 18     | 20    |
+| ❌ Failed | 2      | 0     |
+| 🔧 Fixed  | —      | 2     |
 ```
 
 ---
 
-## Test Reports
+## CI/CD — GitHub Actions
 
-Generate beautiful **Allure reports**:
+The workflow `.github/workflows/scheduled_test_runner.yml` runs automatically:
 
-```bash
-# Generate report data
-pytest --alluredir=allure-results
+| Trigger | When |
+|---------|------|
+| **Schedule** | Every day at 02:00 UTC |
+| **Manual dispatch** | GitHub UI → Actions → Run workflow |
 
-# View the report
-allure serve allure-results
-```
+### Required secrets (GitHub → Settings → Secrets → Actions)
 
----
+| Secret | Purpose |
+|--------|---------|
+| `TELEGRAM_BOT_TOKEN` | Telegram bot token from @BotFather |
+| `TELEGRAM_CHAT_ID` | Target chat / group ID |
+| `ANTHROPIC_API_KEY` | Claude API key (only needed with `ai_fix=true`) |
 
-## Contributing
+### Manual dispatch options
 
-This is a **portfolio project** demonstrating professional automation skills. Feel free to explore the code structure and design patterns used.
+- **marker** — filter tests: `smoke` / `regression` / `sanity` / blank (all)
+- **ai_fix** — `true` to enable Claude AI fixing (requires `ANTHROPIC_API_KEY`)
 
 ---
 
@@ -279,11 +283,3 @@ GitHub: [github.com/gilkalman-portfolio/automation](https://github.com/gilkalman
 ## License
 
 This project is created for **portfolio and demonstration purposes**.
-
----
-
-<div align="center">
-
-**If you find this project helpful, please give it a star!**
-
-</div>
