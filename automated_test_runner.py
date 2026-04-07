@@ -36,6 +36,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+import requests
 from claude_agent_sdk import query, ClaudeAgentOptions, ResultMessage
 
 # ---------------------------------------------------------------------------
@@ -322,6 +323,92 @@ def generate_report(
 
 
 # ---------------------------------------------------------------------------
+# Telegram notifications
+# ---------------------------------------------------------------------------
+
+def _tg_escape(text: str) -> str:
+    """Escape special chars for Telegram MarkdownV2."""
+    for ch in r"\_*[]()~`>#+-=|{}.!":
+        text = text.replace(ch, f"\\{ch}")
+    return text
+
+
+def send_telegram(report_path: Path, initial_report: dict, final_report: dict) -> None:
+    """
+    Send a summary message + the report file to Telegram.
+    Reads TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID from environment.
+    Silently skips if either value is missing.
+    """
+    token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
+    if not token or not chat_id:
+        print("   ℹ️  Telegram: no credentials — skipping notification")
+        return
+
+    base_url = f"https://api.telegram.org/bot{token}"
+
+    # ── Build summary text ────────────────────────────────────────────────
+    def counts(report):
+        tests = report.get("tests", [])
+        return (
+            sum(1 for t in tests if t.get("outcome") == "passed"),
+            sum(1 for t in tests if t.get("outcome") in ("failed", "error")),
+        )
+
+    i_pass, i_fail = counts(initial_report)
+    f_pass, f_fail = counts(final_report)
+    total = i_pass + i_fail
+    fixed = i_fail - f_fail
+
+    if f_fail == 0:
+        status = "✅ ALL PASSING"
+    else:
+        status = f"⚠️ {f_fail} STILL FAILING"
+
+    lines = [
+        f"*Automated Test Report*",
+        f"📅 {datetime.now().strftime('%Y\\-%m\\-%d %H:%M UTC')}",
+        f"",
+        f"Status: *{_tg_escape(status)}*",
+        f"",
+        f"| | Before | After |",
+        f"|\\-|\\-|\\-|",
+        f"| ✅ Passed  | {i_pass} | {f_pass} |",
+        f"| ❌ Failed  | {i_fail} | {f_fail} |",
+        f"| 🔧 Fixed   | — | {fixed} |",
+    ]
+
+    message = "\n".join(lines)
+
+    # ── 1. Send the summary message ───────────────────────────────────────
+    try:
+        resp = requests.post(
+            f"{base_url}/sendMessage",
+            json={"chat_id": chat_id, "text": message, "parse_mode": "MarkdownV2"},
+            timeout=15,
+        )
+        resp.raise_for_status()
+        print("   ✅ Telegram: summary sent")
+    except Exception as exc:
+        print(f"   ⚠️  Telegram: failed to send message — {exc}")
+        return
+
+    # ── 2. Send the full report file ──────────────────────────────────────
+    try:
+        with open(report_path, "rb") as fh:
+            resp = requests.post(
+                f"{base_url}/sendDocument",
+                data={"chat_id": chat_id, "caption": "Full report"},
+                files={"document": (report_path.name, fh, "text/markdown")},
+                timeout=30,
+            )
+        resp.raise_for_status()
+        print("   ✅ Telegram: report file sent")
+    except Exception as exc:
+        print(f"   ⚠️  Telegram: failed to send file — {exc}")
+
+
+# ---------------------------------------------------------------------------
 # Main cycle
 # ---------------------------------------------------------------------------
 
@@ -393,6 +480,10 @@ async def run_cycle(marker: str | None = None, ai_fix: bool = False) -> Path:
     print("\n📊 Generating report …")
     report_path = generate_report(run_id, initial_report, final_report, fix_summary, run_dir)
     print(f"   → {report_path}")
+
+    # ── Step 5: send Telegram notification ───────────────────────────────
+    print("\n📨 Sending Telegram notification …")
+    send_telegram(report_path, initial_report, final_report)
 
     return report_path
 
