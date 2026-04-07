@@ -177,8 +177,7 @@ Then apply your fixes and finish with a FIXES_SUMMARY block.
             cwd=str(PROJECT_ROOT),
             allowed_tools=["Read", "Write", "Edit", "Bash", "Glob", "Grep"],
             permission_mode="acceptEdits",
-            model="claude-opus-4-6",
-            thinking={"type": "adaptive"},
+            model="claude-haiku-4-5",
             system_prompt=AGENT_SYSTEM_PROMPT,
             max_turns=50,
         ),
@@ -326,10 +325,13 @@ def generate_report(
 # Main cycle
 # ---------------------------------------------------------------------------
 
-async def run_cycle(marker: str | None = None) -> Path:
+async def run_cycle(marker: str | None = None, ai_fix: bool = False) -> Path:
     """
     Execute one full cycle:
-      run → (fix if needed) → re-run → report
+      run → (fix with AI if failures + ai_fix=True) → re-run → report
+
+    The report is always generated, regardless of whether AI fixing is enabled
+    or whether the API key is present.
     Returns the path to the generated Markdown report.
     """
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -339,10 +341,11 @@ async def run_cycle(marker: str | None = None) -> Path:
     sep = "=" * 60
     print(f"\n{sep}")
     print(f"  🚀  Test Run: {run_id}" + (f"  [-m {marker}]" if marker else ""))
+    print(f"  AI fix: {'enabled' if ai_fix else 'disabled'}")
     print(sep)
 
-    # ── Step 1: initial test run ─────────────────────────────────────────
-    print("\n📋 Step 1/3 — Running tests …")
+    # ── Step 1: run tests — always executes ──────────────────────────────
+    print("\n📋 Step 1 — Running tests …")
     initial_report = run_pytest(run_dir / "initial", marker=marker)
 
     initial_failures = [
@@ -355,29 +358,36 @@ async def run_cycle(marker: str | None = None) -> Path:
 
     fix_summary = ""
     final_report = initial_report  # default: no re-run needed
+    (run_dir / "after_fix").mkdir(parents=True, exist_ok=True)
 
-    # ── Step 2: fix with Claude agent (only if there are failures) ────────
-    if initial_failures:
-        print(f"\n🔧 Step 2/3 — Fixing {len(initial_failures)} failure(s) with Claude agent …")
-        fix_summary = await run_fix_agent(initial_failures)
+    # ── Step 2: AI fix — only if failures exist AND --ai-fix is set ──────
+    if initial_failures and ai_fix:
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            print("\n⚠️  --ai-fix requested but ANTHROPIC_API_KEY is not set — skipping fix")
+        else:
+            print(f"\n🔧 Step 2 — Fixing {len(initial_failures)} failure(s) with Claude agent …")
+            try:
+                fix_summary = await run_fix_agent(initial_failures)
+            except Exception as exc:
+                print(f"   ⚠️  Agent error: {exc} — continuing without fixes")
+                fix_summary = f"⚠️ Agent failed: {exc}"
 
-        # ── Step 3: re-run failed tests only ─────────────────────────────
-        print("\n🔄 Step 3/3 — Re-running previously failing tests …")
-        failed_nodeids = [t["nodeid"] for t in initial_failures]
-        final_report = run_pytest(
-            run_dir / "after_fix",
-            nodeids=failed_nodeids,
-        )
-        final_failures = [
-            t for t in final_report.get("tests", [])
-            if t.get("outcome") in ("failed", "error")
-        ]
-        fixed = len(initial_failures) - len(final_failures)
-        print(f"   → Fixed: {fixed}/{len(initial_failures)},  still failing: {len(final_failures)}")
+            # ── Step 3: re-run only the tests that failed ─────────────────
+            print("\n🔄 Step 3 — Re-running previously failing tests …")
+            failed_nodeids = [t["nodeid"] for t in initial_failures]
+            final_report = run_pytest(run_dir / "after_fix", nodeids=failed_nodeids)
+            final_failures = [
+                t for t in final_report.get("tests", [])
+                if t.get("outcome") in ("failed", "error")
+            ]
+            fixed = len(initial_failures) - len(final_failures)
+            print(f"   → Fixed: {fixed}/{len(initial_failures)},  still failing: {len(final_failures)}")
+
+    elif initial_failures:
+        print("\nℹ️  Failures found — run with --ai-fix to enable automatic fixing")
     else:
         print("\n✅ All tests passed — nothing to fix")
-        # Mirror structure so report generation always works
-        (run_dir / "after_fix").mkdir(parents=True, exist_ok=True)
 
     # ── Step 4: generate report ──────────────────────────────────────────
     print("\n📊 Generating report …")
@@ -415,10 +425,16 @@ def main() -> None:
         metavar="MARK",
         help="Pytest marker filter, e.g. smoke, regression",
     )
+    parser.add_argument(
+        "--ai-fix",
+        action="store_true",
+        default=False,
+        help="Enable Claude AI to auto-fix failing tests (requires ANTHROPIC_API_KEY)",
+    )
     args = parser.parse_args()
 
     async def _run() -> Path:
-        return await run_cycle(marker=args.marker)
+        return await run_cycle(marker=args.marker, ai_fix=args.ai_fix)
 
     if args.schedule:
         interval_sec = int(args.interval_hours * 3600)
