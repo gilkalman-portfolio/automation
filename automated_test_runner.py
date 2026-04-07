@@ -43,6 +43,20 @@ from claude_agent_sdk import query, ClaudeAgentOptions, ResultMessage
 # Load .env file for local runs (no-op in CI where vars are injected directly)
 load_dotenv()
 
+
+def check_dependencies() -> None:
+    """Warn about missing optional packages without crashing."""
+    missing = []
+    for pkg in ("allure", "pytest_jsonreport", "playwright"):
+        try:
+            __import__(pkg if pkg != "pytest_jsonreport" else "pytest_jsonreport.plugin")
+        except ImportError:
+            missing.append(pkg)
+    if missing:
+        print(f"⚠️  Missing packages: {', '.join(missing)}")
+        print("   Run: pip install -r requirements.flex.txt")
+        print("   And: python -m playwright install chromium")
+
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
@@ -330,18 +344,12 @@ def generate_report(
 # Telegram notifications
 # ---------------------------------------------------------------------------
 
-def _tg_escape(text: str) -> str:
-    """Escape special chars for Telegram MarkdownV2."""
-    for ch in r"\_*[]()~`>#+-=|{}.!":
-        text = text.replace(ch, f"\\{ch}")
-    return text
-
-
 def send_telegram(report_path: Path, initial_report: dict, final_report: dict) -> None:
     """
     Send a summary message + the report file to Telegram.
     Reads TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID from environment.
     Silently skips if either value is missing.
+    Uses HTML parse mode (simpler and more reliable than MarkdownV2).
     """
     token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
@@ -351,7 +359,7 @@ def send_telegram(report_path: Path, initial_report: dict, final_report: dict) -
 
     base_url = f"https://api.telegram.org/bot{token}"
 
-    # ── Build summary text ────────────────────────────────────────────────
+    # ── Build summary text (HTML) ─────────────────────────────────────────
     def counts(report):
         tests = report.get("tests", [])
         return (
@@ -364,31 +372,25 @@ def send_telegram(report_path: Path, initial_report: dict, final_report: dict) -
     total = i_pass + i_fail
     fixed = i_fail - f_fail
 
-    if f_fail == 0:
-        status = "✅ ALL PASSING"
-    else:
-        status = f"⚠️ {f_fail} STILL FAILING"
+    status = "✅ ALL PASSING" if f_fail == 0 else f"⚠️ {f_fail} STILL FAILING"
 
-    lines = [
-        f"*Automated Test Report*",
-        f"📅 {datetime.now().strftime('%Y\\-%m\\-%d %H:%M UTC')}",
-        f"",
-        f"Status: *{_tg_escape(status)}*",
-        f"",
-        f"| | Before | After |",
-        f"|\\-|\\-|\\-|",
-        f"| ✅ Passed  | {i_pass} | {f_pass} |",
-        f"| ❌ Failed  | {i_fail} | {f_fail} |",
-        f"| 🔧 Fixed   | — | {fixed} |",
-    ]
-
-    message = "\n".join(lines)
+    message = (
+        f"<b>🤖 Automated Test Report</b>\n"
+        f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}\n"
+        f"\n"
+        f"<b>Status:</b> {status}\n"
+        f"\n"
+        f"✅ Passed:  {i_pass} → {f_pass}\n"
+        f"❌ Failed:  {i_fail} → {f_fail}\n"
+        f"🔧 Fixed:   {fixed}\n"
+        f"📊 Total:   {total}"
+    )
 
     # ── 1. Send the summary message ───────────────────────────────────────
     try:
         resp = requests.post(
             f"{base_url}/sendMessage",
-            json={"chat_id": chat_id, "text": message, "parse_mode": "MarkdownV2"},
+            json={"chat_id": chat_id, "text": message, "parse_mode": "HTML"},
             timeout=15,
         )
         resp.raise_for_status()
@@ -434,6 +436,7 @@ async def run_cycle(marker: str | None = None, ai_fix: bool = False) -> Path:
     print(f"  🚀  Test Run: {run_id}" + (f"  [-m {marker}]" if marker else ""))
     print(f"  AI fix: {'enabled' if ai_fix else 'disabled'}")
     print(sep)
+    check_dependencies()
 
     # ── Step 1: run tests — always executes ──────────────────────────────
     print("\n📋 Step 1 — Running tests …")
