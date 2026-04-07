@@ -450,6 +450,14 @@ async def run_cycle(marker: str | None = None, ai_fix: bool = False) -> Path:
     i_pass = sum(1 for t in initial_report.get("tests", []) if t.get("outcome") == "passed")
     print(f"   → {i_pass}/{total} passed, {len(initial_failures)} failed/errored")
 
+    if total == 0:
+        print("\n⚠️  No tests were collected! Pytest output:")
+        print("─" * 50)
+        print(initial_report.get("_stdout", "") or "(no stdout)")
+        print(initial_report.get("_stderr", "") or "(no stderr)")
+        print("─" * 50)
+        print("   Tip: run  pytest test_cases/ -v  to debug collection errors")
+
     fix_summary = ""
     final_report = initial_report  # default: no re-run needed
     (run_dir / "after_fix").mkdir(parents=True, exist_ok=True)
