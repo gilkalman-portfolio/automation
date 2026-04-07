@@ -36,7 +36,26 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+import requests
+from dotenv import load_dotenv
 from claude_agent_sdk import query, ClaudeAgentOptions, ResultMessage
+
+# Load .env file for local runs (no-op in CI where vars are injected directly)
+load_dotenv()
+
+
+def check_dependencies() -> None:
+    """Warn about missing optional packages without crashing."""
+    missing = []
+    for pkg in ("allure", "pytest_jsonreport", "playwright"):
+        try:
+            __import__(pkg if pkg != "pytest_jsonreport" else "pytest_jsonreport.plugin")
+        except ImportError:
+            missing.append(pkg)
+    if missing:
+        print(f"⚠️  Missing packages: {', '.join(missing)}")
+        print("   Run: pip install -r requirements.flex.txt")
+        print("   And: python -m playwright install chromium")
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -177,8 +196,7 @@ Then apply your fixes and finish with a FIXES_SUMMARY block.
             cwd=str(PROJECT_ROOT),
             allowed_tools=["Read", "Write", "Edit", "Bash", "Glob", "Grep"],
             permission_mode="acceptEdits",
-            model="claude-opus-4-6",
-            thinking={"type": "adaptive"},
+            model="claude-haiku-4-5",
             system_prompt=AGENT_SYSTEM_PROMPT,
             max_turns=50,
         ),
@@ -323,13 +341,90 @@ def generate_report(
 
 
 # ---------------------------------------------------------------------------
+# Telegram notifications
+# ---------------------------------------------------------------------------
+
+def send_telegram(report_path: Path, initial_report: dict, final_report: dict) -> None:
+    """
+    Send a summary message + the report file to Telegram.
+    Reads TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID from environment.
+    Silently skips if either value is missing.
+    Uses HTML parse mode (simpler and more reliable than MarkdownV2).
+    """
+    token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
+    if not token or not chat_id:
+        print("   ℹ️  Telegram: no credentials — skipping notification")
+        return
+
+    base_url = f"https://api.telegram.org/bot{token}"
+
+    # ── Build summary text (HTML) ─────────────────────────────────────────
+    def counts(report):
+        tests = report.get("tests", [])
+        return (
+            sum(1 for t in tests if t.get("outcome") == "passed"),
+            sum(1 for t in tests if t.get("outcome") in ("failed", "error")),
+        )
+
+    i_pass, i_fail = counts(initial_report)
+    f_pass, f_fail = counts(final_report)
+    total = i_pass + i_fail
+    fixed = i_fail - f_fail
+
+    status = "✅ ALL PASSING" if f_fail == 0 else f"⚠️ {f_fail} STILL FAILING"
+
+    message = (
+        f"<b>🤖 Automated Test Report</b>\n"
+        f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}\n"
+        f"\n"
+        f"<b>Status:</b> {status}\n"
+        f"\n"
+        f"✅ Passed:  {i_pass} → {f_pass}\n"
+        f"❌ Failed:  {i_fail} → {f_fail}\n"
+        f"🔧 Fixed:   {fixed}\n"
+        f"📊 Total:   {total}"
+    )
+
+    # ── 1. Send the summary message ───────────────────────────────────────
+    try:
+        resp = requests.post(
+            f"{base_url}/sendMessage",
+            json={"chat_id": chat_id, "text": message, "parse_mode": "HTML"},
+            timeout=15,
+        )
+        resp.raise_for_status()
+        print("   ✅ Telegram: summary sent")
+    except Exception as exc:
+        print(f"   ⚠️  Telegram: failed to send message — {exc}")
+        return
+
+    # ── 2. Send the full report file ──────────────────────────────────────
+    try:
+        with open(report_path, "rb") as fh:
+            resp = requests.post(
+                f"{base_url}/sendDocument",
+                data={"chat_id": chat_id, "caption": "Full report"},
+                files={"document": (report_path.name, fh, "text/markdown")},
+                timeout=30,
+            )
+        resp.raise_for_status()
+        print("   ✅ Telegram: report file sent")
+    except Exception as exc:
+        print(f"   ⚠️  Telegram: failed to send file — {exc}")
+
+
+# ---------------------------------------------------------------------------
 # Main cycle
 # ---------------------------------------------------------------------------
 
-async def run_cycle(marker: str | None = None) -> Path:
+async def run_cycle(marker: str | None = None, ai_fix: bool = False) -> Path:
     """
     Execute one full cycle:
-      run → (fix if needed) → re-run → report
+      run → (fix with AI if failures + ai_fix=True) → re-run → report
+
+    The report is always generated, regardless of whether AI fixing is enabled
+    or whether the API key is present.
     Returns the path to the generated Markdown report.
     """
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -339,10 +434,12 @@ async def run_cycle(marker: str | None = None) -> Path:
     sep = "=" * 60
     print(f"\n{sep}")
     print(f"  🚀  Test Run: {run_id}" + (f"  [-m {marker}]" if marker else ""))
+    print(f"  AI fix: {'enabled' if ai_fix else 'disabled'}")
     print(sep)
+    check_dependencies()
 
-    # ── Step 1: initial test run ─────────────────────────────────────────
-    print("\n📋 Step 1/3 — Running tests …")
+    # ── Step 1: run tests — always executes ──────────────────────────────
+    print("\n📋 Step 1 — Running tests …")
     initial_report = run_pytest(run_dir / "initial", marker=marker)
 
     initial_failures = [
@@ -353,36 +450,55 @@ async def run_cycle(marker: str | None = None) -> Path:
     i_pass = sum(1 for t in initial_report.get("tests", []) if t.get("outcome") == "passed")
     print(f"   → {i_pass}/{total} passed, {len(initial_failures)} failed/errored")
 
+    if total == 0:
+        print("\n⚠️  No tests were collected! Pytest output:")
+        print("─" * 50)
+        print(initial_report.get("_stdout", "") or "(no stdout)")
+        print(initial_report.get("_stderr", "") or "(no stderr)")
+        print("─" * 50)
+        print("   Tip: run  pytest test_cases/ -v  to debug collection errors")
+
     fix_summary = ""
     final_report = initial_report  # default: no re-run needed
+    (run_dir / "after_fix").mkdir(parents=True, exist_ok=True)
 
-    # ── Step 2: fix with Claude agent (only if there are failures) ────────
-    if initial_failures:
-        print(f"\n🔧 Step 2/3 — Fixing {len(initial_failures)} failure(s) with Claude agent …")
-        fix_summary = await run_fix_agent(initial_failures)
+    # ── Step 2: AI fix — only if failures exist AND --ai-fix is set ──────
+    if initial_failures and ai_fix:
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            print("\n⚠️  --ai-fix requested but ANTHROPIC_API_KEY is not set — skipping fix")
+        else:
+            print(f"\n🔧 Step 2 — Fixing {len(initial_failures)} failure(s) with Claude agent …")
+            try:
+                fix_summary = await run_fix_agent(initial_failures)
+            except Exception as exc:
+                print(f"   ⚠️  Agent error: {exc} — continuing without fixes")
+                fix_summary = f"⚠️ Agent failed: {exc}"
 
-        # ── Step 3: re-run failed tests only ─────────────────────────────
-        print("\n🔄 Step 3/3 — Re-running previously failing tests …")
-        failed_nodeids = [t["nodeid"] for t in initial_failures]
-        final_report = run_pytest(
-            run_dir / "after_fix",
-            nodeids=failed_nodeids,
-        )
-        final_failures = [
-            t for t in final_report.get("tests", [])
-            if t.get("outcome") in ("failed", "error")
-        ]
-        fixed = len(initial_failures) - len(final_failures)
-        print(f"   → Fixed: {fixed}/{len(initial_failures)},  still failing: {len(final_failures)}")
+            # ── Step 3: re-run only the tests that failed ─────────────────
+            print("\n🔄 Step 3 — Re-running previously failing tests …")
+            failed_nodeids = [t["nodeid"] for t in initial_failures]
+            final_report = run_pytest(run_dir / "after_fix", nodeids=failed_nodeids)
+            final_failures = [
+                t for t in final_report.get("tests", [])
+                if t.get("outcome") in ("failed", "error")
+            ]
+            fixed = len(initial_failures) - len(final_failures)
+            print(f"   → Fixed: {fixed}/{len(initial_failures)},  still failing: {len(final_failures)}")
+
+    elif initial_failures:
+        print("\nℹ️  Failures found — run with --ai-fix to enable automatic fixing")
     else:
         print("\n✅ All tests passed — nothing to fix")
-        # Mirror structure so report generation always works
-        (run_dir / "after_fix").mkdir(parents=True, exist_ok=True)
 
     # ── Step 4: generate report ──────────────────────────────────────────
     print("\n📊 Generating report …")
     report_path = generate_report(run_id, initial_report, final_report, fix_summary, run_dir)
     print(f"   → {report_path}")
+
+    # ── Step 5: send Telegram notification ───────────────────────────────
+    print("\n📨 Sending Telegram notification …")
+    send_telegram(report_path, initial_report, final_report)
 
     return report_path
 
@@ -415,10 +531,16 @@ def main() -> None:
         metavar="MARK",
         help="Pytest marker filter, e.g. smoke, regression",
     )
+    parser.add_argument(
+        "--ai-fix",
+        action="store_true",
+        default=False,
+        help="Enable Claude AI to auto-fix failing tests (requires ANTHROPIC_API_KEY)",
+    )
     args = parser.parse_args()
 
     async def _run() -> Path:
-        return await run_cycle(marker=args.marker)
+        return await run_cycle(marker=args.marker, ai_fix=args.ai_fix)
 
     if args.schedule:
         interval_sec = int(args.interval_hours * 3600)

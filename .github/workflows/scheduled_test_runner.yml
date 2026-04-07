@@ -23,6 +23,14 @@ on:
           - sanity
           - api
           - ui
+      ai_fix:
+        description: 'Enable Claude AI to auto-fix failing tests'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Permissions — needed to push the report back to the repo
@@ -71,15 +79,22 @@ jobs:
       - name: Run automated test runner
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          # Force headless so Playwright doesn't look for a display
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           DISPLAY: ''
         run: |
+          ARGS=""
+
           MARKER="${{ github.event.inputs.marker }}"
-          if [ -n "$MARKER" ]; then
-            python automated_test_runner.py -m "$MARKER"
-          else
-            python automated_test_runner.py
+          [ -n "$MARKER" ] && ARGS="$ARGS -m $MARKER"
+
+          # Enable AI fix only when explicitly requested AND the secret exists
+          AI_FIX="${{ github.event.inputs.ai_fix }}"
+          if [ "$AI_FIX" = "true" ] && [ -n "$ANTHROPIC_API_KEY" ]; then
+            ARGS="$ARGS --ai-fix"
           fi
+
+          python automated_test_runner.py $ARGS
 
       # ── 6. Upload reports as workflow artifacts ───────────────────────────────
       - name: Upload test reports

@@ -11,3 +11,15 @@ allure-results/
 allure-report/
 
 .idea/
+
+# Environment / secrets — never commit these
+.env
+.env.*
+
+# Test run artifacts
+test_runs/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
