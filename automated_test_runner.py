@@ -37,7 +37,11 @@ from datetime import datetime
 from pathlib import Path
 
 import requests
+from dotenv import load_dotenv
 from claude_agent_sdk import query, ClaudeAgentOptions, ResultMessage
+
+# Load .env file for local runs (no-op in CI where vars are injected directly)
+load_dotenv()
 
 # ---------------------------------------------------------------------------
 # Paths
