@@ -38,6 +38,9 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   test-and-fix:
     name: Run → Fix → Report
@@ -75,13 +78,18 @@ jobs:
       - name: Install Claude Code CLI
         run: npm install -g @anthropic-ai/claude-code
 
-      # ── 5. Run the automated test runner ─────────────────────────────────────
+      # ── 5. Verify test collection (surfaces import/collection errors) ─────────
+      - name: Verify test collection
+        run: python -m pytest --collect-only -q 2>&1 | head -80
+        continue-on-error: true
+
+      # ── 6. Run the automated test runner ─────────────────────────────────────
       - name: Run automated test runner
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          DISPLAY: ''
+          TEST_HEADLESS: 'true'
         run: |
           ARGS=""
 
@@ -96,7 +104,7 @@ jobs:
 
           python automated_test_runner.py $ARGS
 
-      # ── 6. Upload reports as workflow artifacts ───────────────────────────────
+      # ── 7. Upload reports as workflow artifacts ───────────────────────────────
       - name: Upload test reports
         uses: actions/upload-artifact@v4
         if: always()
@@ -107,7 +115,7 @@ jobs:
             test_runs/
           retention-days: 30
 
-      # ── 7. Commit the Markdown report back to the repo ────────────────────────
+      # ── 8. Commit the Markdown report back to the repo ────────────────────────
       #    This makes reports browsable directly on GitHub without downloading
       #    an artifact zip.
       - name: Commit report to repository

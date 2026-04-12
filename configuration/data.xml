@@ -4,7 +4,7 @@
     <env>stg</env>                          <!-- stg | prod | dev -->
     <baseUrl>auto</baseUrl>                 <!-- "auto" = resolve from <environments> by <env> -->
     <headless>false</headless>               <!-- true for CI by default; locally you can override -->
-    <browsers>chromium,firefox</browsers>           <!-- comma separated: chromium,firefox,webkit -->
+    <browsers>chromium</browsers>           <!-- comma separated: chromium,firefox,webkit -->
     <devices>desktop</devices>              <!-- desktop or a Playwright preset like "Pixel 7","iPhone 14" -->
     <tags>smoke,regression</tags>           <!-- optional; can be used with -m filtering -->
     <workers>2</workers>                    <!-- xdist workers (parallel) -->

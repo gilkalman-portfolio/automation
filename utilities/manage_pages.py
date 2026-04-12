@@ -1,6 +1,6 @@
 from playwright.sync_api import Page
 
-from api_objects.users_api import UsersApi
+#from api_objects.users_api import UsersApi
 from page_objects.login_page import LoginPage
 from page_objects.inventory_page import InventoryPage
 from page_objects.cart_page import CartPage

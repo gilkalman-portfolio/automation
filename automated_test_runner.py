@@ -274,6 +274,31 @@ def generate_report(
         "",
     ]
 
+    # ── Collection errors ────────────────────────────────────────────────
+    collection_errors = initial_report.get("errors", [])
+    if collection_errors or total == 0:
+        lines += [
+            "---",
+            "",
+            "## Collection Errors / No Tests Found",
+            "",
+        ]
+        if collection_errors:
+            for err in collection_errors:
+                where = err.get("nodeid") or err.get("when") or "unknown"
+                longrepr = err.get("longrepr", "") or ""
+                if len(longrepr) > 1500:
+                    longrepr = longrepr[:1500] + "\n... (truncated)"
+                lines += [f"### `{where}`", "", "```", longrepr, "```", ""]
+        else:
+            stdout = (initial_report.get("_stdout", "") or "").strip()
+            stderr = (initial_report.get("_stderr", "") or "").strip()
+            lines += ["Pytest reported 0 tests. See raw output below:", ""]
+            if stdout:
+                lines += ["**stdout:**", "```", stdout[:2000], "```", ""]
+            if stderr:
+                lines += ["**stderr:**", "```", stderr[:2000], "```", ""]
+
     # ── Initial failures detail ──────────────────────────────────────────
     if initial_failures:
         lines += [
