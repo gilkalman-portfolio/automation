@@ -276,7 +276,8 @@ def generate_report(
 
     # ── Collection errors ────────────────────────────────────────────────
     collection_errors = initial_report.get("errors", [])
-    if collection_errors or total == 0:
+    total_tests = i_pass + i_fail + i_err + i_skip
+    if collection_errors or total_tests == 0:
         lines += [
             "---",
             "",
