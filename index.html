@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SauceDemo Testing Portfolio | Gil Kalman – QA Engineer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --primary:       #0D47A1;
+      --primary-mid:   #1565C0;
+      --primary-light: #1976D2;
+      --accent:        #42A5F5;
+      --accent-dim:    #90CAF9;
+      --success:       #2E7D32;
+      --success-bg:    #E8F5E9;
+      --danger:        #C62828;
+      --danger-bg:     #FFEBEE;
+      --warn:          #E65100;
+      --warn-bg:       #FFF3E0;
+      --blocked:       #6A1B9A;
+      --blocked-bg:    #F3E5F5;
+      --smoke-c:       #0277BD;
+      --smoke-bg:      #E1F5FE;
+      --reg-c:         #4527A0;
+      --reg-bg:        #EDE7F6;
+      --text:          #1A1A2E;
+      --text-muted:    #546E7A;
+      --bg:            #EEF2F7;
+      --card:          #FFFFFF;
+      --border:        #D0DBE8;
+      --shadow:        0 2px 12px rgba(13,71,161,.10);
+      --shadow-hover:  0 6px 24px rgba(13,71,161,.18);
+      --radius:        10px;
+      --radius-lg:     16px;
+      --mono:          'JetBrains Mono', 'Consolas', 'Courier New', monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Rubik', 'Inter', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+    a { color: var(--primary-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #07173A 0%, #0D47A1 55%, #1565C0 100%);
+      color: #fff;
+      padding: 56px 40px 48px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content:''; position:absolute; top:-70px; left:-70px;
+      width:320px; height:320px; background:rgba(255,255,255,.04); border-radius:50%;
+    }
+    header::after {
+      content:''; position:absolute; bottom:-80px; right:-40px;
+      width:260px; height:260px; background:rgba(66,165,245,.08); border-radius:50%;
+    }
+    .header-logo {
+      display:inline-block; background:rgba(255,255,255,.13);
+      border:1px solid rgba(255,255,255,.22); border-radius:10px;
+      padding:6px 20px; font-size:12.5px; font-weight:600; letter-spacing:.07em;
+      margin-bottom:20px; color:var(--accent-dim); direction:ltr;
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.5rem);
+      font-weight:700; margin-bottom:8px;
+    }
+    header h1 span { color:var(--accent); }
+    header .subtitle {
+      font-size:1rem; color:rgba(255,255,255,.75); margin-bottom:26px; font-weight:300;
+    }
+    .author-badge {
+      display:inline-flex; align-items:center; gap:12px;
+      background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22);
+      border-radius:40px; padding:10px 24px; font-weight:500;
+    }
+    .author-avatar {
+      width:38px; height:38px; border-radius:50%; background:var(--accent);
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:15px; color:var(--primary); flex-shrink:0;
+    }
+    .header-meta {
+      display:flex; justify-content:center; gap:20px; margin-top:28px; flex-wrap:wrap;
+    }
+    .meta-pill {
+      background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.16);
+      border-radius:6px; padding:5px 14px; font-size:12.5px;
+      color:rgba(255,255,255,.80); direction:ltr;
+    }
+    .meta-pill strong { color:var(--accent-dim); }
+
+    /* tech-stack chips in header */
+    .tech-stack {
+      display:flex; justify-content:center; gap:10px; margin-top:20px; flex-wrap:wrap;
+    }
+    .tech-chip {
+      background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18);
+      border-radius:20px; padding:4px 14px; font-size:12px; direction:ltr;
+      color:rgba(255,255,255,.85); display:flex; align-items:center; gap:6px;
+    }
+    .tech-chip .dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+
+    /* ── Nav ── */
+    nav {
+      position:sticky; top:0; z-index:100;
+      background:var(--primary); box-shadow:0 2px 8px rgba(0,0,0,.25);
+      display:flex; justify-content:center; gap:4px; padding:0 20px;
+    }
+    nav a {
+      color:rgba(255,255,255,.75); padding:13px 26px; font-size:14px; font-weight:500;
+      border-bottom:3px solid transparent; transition:all .2s;
+      display:flex; align-items:center; gap:8px;
+    }
+    nav a:hover, nav a.active {
+      color:#fff; border-bottom-color:var(--accent); text-decoration:none;
+      background:rgba(255,255,255,.06);
+    }
+    .nav-tag {
+      background:rgba(255,255,255,.15); border-radius:4px;
+      padding:1px 7px; font-size:11px; font-weight:700; direction:ltr;
+    }
+
+    /* ── Main ── */
+    main { max-width:1140px; margin:0 auto; padding:40px 24px 80px; }
+
+    /* ── Section card ── */
+    .doc-section {
+      background:var(--card); border-radius:var(--radius-lg);
+      box-shadow:var(--shadow); margin-bottom:48px; overflow:hidden;
+    }
+    .section-header {
+      background:linear-gradient(90deg, var(--primary) 0%, var(--primary-mid) 100%);
+      color:#fff; padding:26px 36px; display:flex; align-items:center; gap:16px;
+    }
+    .section-icon {
+      width:50px; height:50px; border-radius:12px; background:rgba(255,255,255,.15);
+      display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;
+    }
+    .section-title { font-size:1.45rem; font-weight:700; }
+    .section-subtitle { font-size:.88rem; color:rgba(255,255,255,.72); margin-top:2px; direction:ltr; }
+    .doc-tag {
+      margin-right:auto; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.25);
+      border-radius:6px; padding:4px 12px; font-size:12px; font-weight:600; direction:ltr; white-space:nowrap;
+    }
+    .section-body { padding:36px; }
+
+    /* ── Generic helpers ── */
+    .ltr { direction:ltr; unicode-bidi:embed; }
+    .mono-tag {
+      font-family:var(--mono); background:#EFF3FB; border:1px solid #C5D8F5;
+      padding:1px 7px; border-radius:4px; font-size:12px; direction:ltr; display:inline-block;
+    }
+    .divider { border:none; border-top:1px solid var(--border); margin:28px 0; }
+    .section-intro { font-size:14.5px; color:var(--text-muted); margin-bottom:28px; line-height:1.9; }
+    h2.sub {
+      font-size:.98rem; color:var(--primary); border-right:4px solid var(--accent);
+      padding-right:12px; margin:28px 0 14px;
+    }
+
+    /* ── Badges ── */
+    .badge {
+      display:inline-flex; align-items:center; gap:5px; border-radius:20px;
+      padding:3px 11px; font-size:12px; font-weight:600; white-space:nowrap; direction:ltr;
+    }
+    .badge::before { content:''; width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .badge-pass   { background:var(--success-bg); color:var(--success); }
+    .badge-pass::before   { background:var(--success); }
+    .badge-fail   { background:var(--danger-bg);  color:var(--danger);  }
+    .badge-fail::before   { background:var(--danger);  }
+    .badge-block  { background:var(--blocked-bg); color:var(--blocked); }
+    .badge-block::before  { background:var(--blocked); }
+    .badge-smoke  { background:var(--smoke-bg);   color:var(--smoke-c); }
+    .badge-smoke::before  { background:var(--smoke-c); }
+    .badge-reg    { background:var(--reg-bg);     color:var(--reg-c);   }
+    .badge-reg::before    { background:var(--reg-c); }
+    .badge-high   { background:#FBE9E7; color:#BF360C; }
+    .badge-medium { background:#FFF9C4; color:#827717; }
+
+    /* ── STP cards ── */
+    .stp-grid {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(295px,1fr));
+      gap:22px; margin-bottom:24px;
+    }
+    .stp-card {
+      border:1px solid var(--border); border-radius:var(--radius);
+      padding:20px 22px; transition:box-shadow .2s;
+    }
+    .stp-card:hover { box-shadow:var(--shadow-hover); }
+    .stp-card-num {
+      font-size:11px; font-weight:700; color:var(--primary-light);
+      letter-spacing:.08em; margin-bottom:6px; direction:ltr; display:block;
+    }
+    .stp-card h3 { font-size:.98rem; font-weight:600; margin-bottom:10px; color:var(--primary); }
+    .stp-card p, .stp-card li { font-size:14px; color:var(--text-muted); line-height:1.85; }
+    .stp-card ul { padding-right:18px; }
+    .stp-card li { margin-bottom:4px; }
+
+    .info-table { width:100%; border-collapse:collapse; font-size:14px; }
+    .info-table td { padding:10px 14px; border-bottom:1px solid var(--border); vertical-align:top; }
+    .info-table tr:last-child td { border-bottom:none; }
+    .info-table td:first-child { font-weight:600; color:var(--primary); width:35%; white-space:nowrap; }
+
+    /* architecture diagram row */
+    .arch-row {
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px; direction:ltr;
+    }
+    .arch-box {
+      background:var(--bg); border:1px solid var(--border); border-radius:8px;
+      padding:10px 16px; font-size:13px; font-weight:500; text-align:center;
+    }
+    .arch-box .arch-label { font-size:11px; color:var(--text-muted); font-weight:400; }
+    .arch-arrow { color:var(--text-muted); font-size:18px; }
+
+    /* ── Suite header ── */
+    .suite-header {
+      display:flex; align-items:center; gap:12px; background:var(--bg);
+      border:1px solid var(--border); border-radius:var(--radius);
+      padding:13px 18px; margin-bottom:14px; margin-top:28px;
+    }
+    .suite-header:first-of-type { margin-top:0; }
+    .suite-id {
+      background:var(--primary); color:#fff; border-radius:6px;
+      padding:4px 10px; font-size:12px; font-weight:700; direction:ltr; flex-shrink:0;
+    }
+    .suite-title { font-weight:600; font-size:.98rem; }
+    .suite-meta { margin-right:auto; font-size:12px; color:var(--text-muted); font-weight:500; }
+    .suite-file { font-family:var(--mono); font-size:11.5px; color:var(--primary-light); }
+
+    /* ── TC table ── */
+    .tc-wrap { overflow-x:auto; margin-bottom:6px; }
+    table.tc-table { width:100%; border-collapse:collapse; font-size:13px; direction:ltr; }
+    table.tc-table th {
+      background:var(--primary); color:#fff; padding:10px 13px;
+      text-align:left; font-weight:600; white-space:nowrap;
+    }
+    table.tc-table td {
+      padding:10px 13px; border-bottom:1px solid var(--border);
+      vertical-align:top; line-height:1.6;
+    }
+    table.tc-table tr:nth-child(even) td { background:#F8FAFC; }
+    table.tc-table tr:hover td { background:#EDF2FB; }
+    .tc-id { font-weight:700; color:var(--primary-light); white-space:nowrap; font-family:var(--mono); font-size:12px; }
+    .fn-name { font-family:var(--mono); font-size:11.5px; color:var(--text-muted); display:block; margin-top:3px; }
+    .steps-col ol { padding-left:16px; margin:0; }
+    .steps-col li { margin-bottom:3px; }
+    .assert-code {
+      font-family:var(--mono); font-size:11.5px; background:#EFF3FB;
+      border:1px solid #C5D8F5; border-radius:4px; padding:3px 8px;
+      display:inline-block; margin-top:2px; direction:ltr;
+    }
+
+    /* ── STR metrics ── */
+    .metrics-grid {
+      display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:30px;
+    }
+    @media(max-width:700px) { .metrics-grid { grid-template-columns:repeat(2,1fr); } }
+    .metric-card {
+      border-radius:var(--radius); padding:20px 16px; text-align:center; border:1px solid var(--border);
+    }
+    .metric-card .mn { font-size:2.4rem; font-weight:700; line-height:1; margin-bottom:5px; }
+    .metric-card .ml { font-size:12.5px; font-weight:500; color:var(--text-muted); }
+    .metric-card .mp { font-size:12px; margin-top:4px; font-weight:600; }
+    .mc-total { background:#EFF3FB; }
+    .mc-total .mn { color:var(--primary); }
+    .mc-smoke { background:var(--smoke-bg); }
+    .mc-smoke .mn { color:var(--smoke-c); }
+    .mc-reg   { background:var(--reg-bg); }
+    .mc-reg .mn   { color:var(--reg-c); }
+    .mc-pass  { background:var(--success-bg); }
+    .mc-pass .mn  { color:var(--success); }
+
+    /* bar chart */
+    .bar-chart { margin-bottom:28px; }
+    .bar-chart-title { font-weight:600; margin-bottom:12px; font-size:14.5px; }
+    .bar-track {
+      height:26px; border-radius:8px; overflow:hidden; display:flex;
+      background:#E0E7EF; margin-bottom:8px;
+    }
+    .bar-seg {
+      height:100%; display:flex; align-items:center; justify-content:center;
+      font-size:12px; font-weight:700; color:#fff;
+    }
+    .bar-legend { display:flex; gap:18px; flex-wrap:wrap; }
+    .legend-item { display:flex; align-items:center; gap:6px; font-size:13px; }
+    .legend-dot { width:12px; height:12px; border-radius:3px; flex-shrink:0; }
+
+    /* per-suite bars */
+    .suite-bar-row { display:flex; align-items:center; gap:12px; margin-bottom:9px; }
+    .suite-bar-label { width:140px; flex-shrink:0; font-weight:500; font-size:13px; direction:ltr; }
+    .suite-bar-track { flex:1; height:16px; background:#E0E7EF; border-radius:4px; overflow:hidden; }
+    .suite-bar-fill { height:100%; background:var(--success); }
+    .suite-bar-pct { font-size:12px; color:var(--text-muted); width:48px; text-align:right; direction:ltr; }
+
+    /* results table */
+    table.res-table { width:100%; border-collapse:collapse; font-size:13px; direction:ltr; }
+    table.res-table th {
+      background:var(--primary); color:#fff; padding:10px 13px;
+      text-align:left; font-weight:600; white-space:nowrap;
+    }
+    table.res-table td {
+      padding:9px 13px; border-bottom:1px solid var(--border); vertical-align:middle;
+    }
+    table.res-table tr:nth-child(even) td { background:#F8FAFC; }
+    table.res-table tr:hover td { background:#EDF2FB; }
+
+    /* no-defects box */
+    .no-defects {
+      background:var(--success-bg); border:1px solid #A5D6A7; border-radius:var(--radius);
+      padding:22px 26px; display:flex; align-items:center; gap:18px; margin-bottom:24px;
+    }
+    .no-defects-icon { font-size:36px; flex-shrink:0; }
+    .no-defects h3 { font-size:.98rem; color:var(--success); margin-bottom:4px; }
+    .no-defects p { font-size:13.5px; color:var(--text-muted); }
+
+    /* conclusion */
+    .conclusion-box {
+      background:linear-gradient(135deg,#EFF4FB 0%,#E8F0FD 100%);
+      border:1px solid #C5D8F5; border-radius:var(--radius); padding:22px 26px; margin-top:22px;
+    }
+    .conclusion-box h3 { font-size:.98rem; color:var(--primary); margin-bottom:10px; }
+    .conclusion-box ul { padding-right:20px; }
+    .conclusion-box li { font-size:14px; margin-bottom:6px; color:var(--text-muted); }
+
+    /* sign-off */
+    .signoff {
+      display:flex; align-items:center; gap:16px;
+      border-top:1px solid var(--border); padding-top:22px; margin-top:28px;
+    }
+    .signoff-avatar {
+      width:50px; height:50px; border-radius:50%; background:var(--primary);
+      color:#fff; display:flex; align-items:center; justify-content:center;
+      font-size:19px; font-weight:700; flex-shrink:0;
+    }
+    .signoff-name { font-weight:700; font-size:15px; }
+    .signoff-role { font-size:13px; color:var(--text-muted); }
+    .signoff-date { margin-right:auto; font-size:13px; color:var(--text-muted); direction:ltr; text-align:left; }
+
+    /* footer */
+    footer {
+      background:var(--primary); color:rgba(255,255,255,.75);
+      text-align:center; padding:30px 24px; font-size:13.5px;
+    }
+    footer strong { color:#fff; }
+    footer .footer-links { margin-top:10px; display:flex; justify-content:center; gap:24px; flex-wrap:wrap; }
+    footer .footer-links a { color:var(--accent-dim); font-size:13px; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ HEADER ═══════════════════════════ -->
+<header>
+  <div class="header-logo ltr">QA AUTOMATION PORTFOLIO</div>
+  <h1>פרויקט בדיקות אוטומציה | <span>SauceDemo</span></h1>
+  <p class="subtitle">תיעוד בדיקות מקיף · STP · STD · STR</p>
+  <div class="author-badge">
+    <div class="author-avatar">GK</div>
+    <div>
+      <div style="font-weight:600;">גיל קלמן &nbsp;|&nbsp; <span class="ltr">Gil Kalman</span></div>
+      <div style="font-size:12px;color:rgba(255,255,255,.70);">Quality Assurance Engineer</div>
+    </div>
+  </div>
+  <div class="tech-stack">
+    <div class="tech-chip"><span class="dot" style="background:#00B4D8;"></span>Playwright (Python)</div>
+    <div class="tech-chip"><span class="dot" style="background:#F7DC6F;"></span>pytest</div>
+    <div class="tech-chip"><span class="dot" style="background:#F1948A;"></span>Allure Report</div>
+    <div class="tech-chip"><span class="dot" style="background:#82E0AA;"></span>Page Object Model</div>
+    <div class="tech-chip"><span class="dot" style="background:#C39BD3;"></span>WebFlows Layer</div>
+  </div>
+  <div class="header-meta">
+    <div class="meta-pill"><strong>Version</strong> 1.0</div>
+    <div class="meta-pill"><strong>Date</strong> April 2026</div>
+    <div class="meta-pill"><strong>SUT</strong> SauceDemo v1.0</div>
+    <div class="meta-pill"><strong>Test Cases</strong> 20</div>
+    <div class="meta-pill"><strong>Pass Rate</strong> 100 %</div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════ NAV ═══════════════════════════ -->
+<nav id="top-nav">
+  <a href="#stp"><span class="nav-tag">STP</span> תוכנית הבדיקות</a>
+  <a href="#std"><span class="nav-tag">STD</span> תיאור הבדיקות</a>
+  <a href="#str"><span class="nav-tag">STR</span> דוח תוצאות</a>
+</nav>
+
+<!-- ═══════════════════════════ MAIN ═══════════════════════════ -->
+<main>
+
+  <!-- ══════════════════════════════ STP ══════════════════════════════ -->
+  <div class="doc-section" id="stp">
+    <div class="section-header">
+      <div class="section-icon">📋</div>
+      <div>
+        <div class="section-title">Software Test Plan – STP</div>
+        <div class="section-subtitle">תוכנית הבדיקות | SauceDemo E-Commerce Platform</div>
+      </div>
+      <div class="doc-tag">STP-SAUCEDEMO-001 · v1.0</div>
+    </div>
+    <div class="section-body">
+
+      <p class="section-intro">
+        מסמך זה מגדיר את תוכנית הבדיקות המלאה עבור מערכת <strong>SauceDemo</strong>.
+        הבדיקות מומשו בפריימוורק <span class="mono-tag">Playwright (Python)</span> עם <span class="mono-tag">pytest</span>,
+        תוך שימוש בארכיטקטורת <strong>Page Object Model</strong> ושכבת <strong>WebFlows</strong> לתזמור פעולות מורכבות.
+        כלל התוצאות מתועדות ב-<span class="mono-tag">Allure Report</span>.
+      </p>
+
+      <!-- 1 + 2 -->
+      <div class="stp-grid">
+        <div class="stp-card">
+          <span class="stp-card-num">1.0 · INTRODUCTION</span>
+          <h3>מבוא</h3>
+          <p>
+            הפרויקט בודק את <span class="mono-tag">saucedemo.com</span> — אפליקציית ווב המדמה חנות אינטרנטית עם תהליכי
+            התחברות, קטלוג מוצרים, עגלת קניות ותשלום. כל הטסטים ממוקמים בקובץ
+            <span class="mono-tag">test_cases/test_saucedemo.py</span> ומאורגנים ב-5 Classes לפי
+            <span class="mono-tag">@allure.suite</span>.
+          </p>
+        </div>
+        <div class="stp-card">
+          <span class="stp-card-num">2.0 · TEST OBJECTIVES</span>
+          <h3>מטרות הבדיקה</h3>
+          <ul>
+            <li>אימות תהליך ה-Login לסוגי משתמשים שונים</li>
+            <li>אימות תצוגת מוצרים, כמות ומיון</li>
+            <li>בדיקת פונקציונליות עגלת הקניות</li>
+            <li>אימות תהליך ה-Checkout מקצה לקצה</li>
+            <li>בדיקת ניווט ו-Logout מהאפליקציה</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Architecture -->
+      <h2 class="sub">ארכיטקטורת הפריימוורק – Framework Architecture</h2>
+      <div class="arch-row">
+        <div class="arch-box">
+          <div style="font-size:18px;">🧪</div>
+          <div><strong>test_saucedemo.py</strong></div>
+          <div class="arch-label">Test Classes</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box">
+          <div style="font-size:18px;">⚙️</div>
+          <div><strong>WebFlows</strong></div>
+          <div class="arch-label">web_workflow.py</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box">
+          <div style="font-size:18px;">📄</div>
+          <div><strong>Page Objects</strong></div>
+          <div class="arch-label">LoginPage · InventoryPage · CartPage · CheckoutPage</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box">
+          <div style="font-size:18px;">🌐</div>
+          <div><strong>Playwright</strong></div>
+          <div class="arch-label">Browser Automation</div>
+        </div>
+      </div>
+      <div class="stp-grid" style="margin-top:14px;">
+        <div class="stp-card">
+          <span class="stp-card-num">PAGE OBJECT MODEL</span>
+          <h3>שכבת Page Objects</h3>
+          <ul>
+            <li><span class="mono-tag">LoginPage</span> — שדות login, כפתור, error</li>
+            <li><span class="mono-tag">InventoryPage</span> — מוצרים, מיון, עגלה, logout</li>
+            <li><span class="mono-tag">CartPage</span> — פריטים, remove, checkout</li>
+            <li><span class="mono-tag">CheckoutPage</span> — step-one, overview, complete</li>
+          </ul>
+        </div>
+        <div class="stp-card">
+          <span class="stp-card-num">WEBFLOWS LAYER</span>
+          <h3>שכבת WebFlows</h3>
+          <ul>
+            <li><span class="mono-tag">login_valid()</span> — standard_user / secret_sauce</li>
+            <li><span class="mono-tag">add_item_to_cart(slug)</span></li>
+            <li><span class="mono-tag">go_to_cart() / proceed_to_checkout()</span></li>
+            <li><span class="mono-tag">fill_checkout_info(fn, ln, zip)</span></li>
+            <li><span class="mono-tag">logout()</span> — burger menu → logout link</li>
+          </ul>
+        </div>
+        <div class="stp-card">
+          <span class="stp-card-num">PYTEST FIXTURES (conftest.py)</span>
+          <h3>Fixtures ונתוני קנפיגורציה</h3>
+          <ul>
+            <li><span class="mono-tag">web_workflow</span> — מכיל את WebFlows + page</li>
+            <li><span class="mono-tag">context</span> — Playwright BrowserContext</li>
+            <li><span class="mono-tag">trace / video / screenshot</span> — לפי data.xml</li>
+            <li><span class="mono-tag">capture_console_logs</span> — autouse, כל טסט</li>
+          </ul>
+        </div>
+        <div class="stp-card">
+          <span class="stp-card-num">ALLURE & MARKERS</span>
+          <h3>דיווח ו-Markers</h3>
+          <ul>
+            <li><span class="mono-tag">@allure.suite</span> — קיבוץ לפי מודול</li>
+            <li><span class="mono-tag">@allure.title</span> — שם תיאורי לכל טסט</li>
+            <li><span class="mono-tag">@pytest.mark.smoke</span> — 8 טסטים</li>
+            <li><span class="mono-tag">@pytest.mark.regression</span> — 12 טסטים</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 3 Scope -->
+      <h2 class="sub">3.0 · היקף הבדיקה – Test Scope</h2>
+      <div class="stp-grid">
+        <div class="stp-card">
+          <span class="stp-card-num">IN SCOPE – בתחום הבדיקה</span>
+          <h3>✅ נבדק</h3>
+          <ul>
+            <li>Login — valid, locked, invalid, empty fields</li>
+            <li>Products — count, title, sorting (3 אפשרויות)</li>
+            <li>Cart — add, remove, badge count</li>
+            <li>Checkout — validation, overview total, E2E flow</li>
+            <li>Navigation — logout ← burger menu</li>
+          </ul>
+        </div>
+        <div class="stp-card">
+          <span class="stp-card-num">OUT OF SCOPE – מחוץ לתחום</span>
+          <h3>🚫 לא נבדק</h3>
+          <ul>
+            <li>בדיקות API / Backend</li>
+            <li>בדיקות עומס / ביצועים</li>
+            <li>בדיקות אבטחה</li>
+            <li>Mobile / Responsive</li>
+            <li>problem_user / performance_glitch_user</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 4 Approach -->
+      <h2 class="sub">4.0 · גישת הבדיקה – Test Approach</h2>
+      <div class="stp-grid">
+        <div class="stp-card">
+          <span class="stp-card-num">METHODOLOGY</span>
+          <h3>מתודולוגיה</h3>
+          <p>
+            בדיקות Black-Box פונקציונליות באמצעות Playwright עם Chromium.
+            כל Class מגדיר <span class="mono-tag">autouse fixture</span> לחיבור והכנת מצב ראשוני.
+            טסטי Smoke מריצים את הנתיב המוצלח הקריטי; Regression מכסה גבולות ונתיבים שליליים.
+          </p>
+        </div>
+        <div class="stp-card">
+          <span class="stp-card-num">USER UNDER TEST</span>
+          <h3>משתמש הבדיקה</h3>
+          <ul>
+            <li><span class="mono-tag">standard_user</span> / <span class="mono-tag">secret_sauce</span> — ראשי</li>
+            <li><span class="mono-tag">locked_out_user</span> — בדיקת נעילה (negative)</li>
+            <li><span class="mono-tag">wrong_user / wrong_pass</span> — credentials שגויים</li>
+            <li>Empty username / Empty password — boundary tests</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 5 Environment -->
+      <h2 class="sub">5.0 · סביבת הבדיקה – Test Environment</h2>
+      <table class="info-table ltr">
+        <tbody>
+          <tr><td>Application URL</td><td><a href="https://www.saucedemo.com" target="_blank">https://www.saucedemo.com</a></td></tr>
+          <tr><td>OS</td><td>Windows 11 Pro</td></tr>
+          <tr><td>Browser</td><td>Chromium (via Playwright)</td></tr>
+          <tr><td>Automation Framework</td><td>Playwright sync_api (Python)</td></tr>
+          <tr><td>Language</td><td>Python 3.12</td></tr>
+          <tr><td>Test Runner</td><td>pytest 8.x</td></tr>
+          <tr><td>Reporting</td><td>Allure Report (@allure.suite / @allure.title)</td></tr>
+          <tr><td>Artifacts</td><td>Screenshots (on failure) · Traces (retain-on-failure) · Console logs</td></tr>
+          <tr><td>IDE</td><td>PyCharm</td></tr>
+          <tr><td>VCS</td><td>Git / GitHub</td></tr>
+        </tbody>
+      </table>
+
+      <!-- 6 Criteria -->
+      <h2 class="sub">6.0 · קריטריוני כניסה ויציאה – Entry / Exit Criteria</h2>
+      <div class="stp-grid">
+        <div class="stp-card">
+          <span class="stp-card-num">ENTRY CRITERIA</span>
+          <h3>תנאי פתיחה</h3>
+          <ul>
+            <li>האפליקציה נגישה ב-URL המוגדר</li>
+            <li>Playwright מותקן וה-browser זמין</li>
+            <li>כל ה-fixtures ב-conftest.py תקינים</li>
+            <li>data.xml מוגדר עם base_url ו-browser</li>
+          </ul>
+        </div>
+        <div class="stp-card">
+          <span class="stp-card-num">EXIT CRITERIA</span>
+          <h3>תנאי סגירה</h3>
+          <ul>
+            <li>כל 20 הטסטים בוצעו</li>
+            <li>100% ממרקר Smoke עברו</li>
+            <li>אחוז Pass כולל ≥ 80%</li>
+            <li>דוח STR נכתב ואושר</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 7+8 -->
+      <h2 class="sub">7.0 · לוח זמנים – Schedule</h2>
+      <table class="info-table ltr">
+        <tbody>
+          <tr><td>STP – Test Planning</td><td>Week 1 · Days 1–2</td></tr>
+          <tr><td>STD + Framework Setup (POM / WebFlows)</td><td>Week 1 · Days 3–5</td></tr>
+          <tr><td>Test Implementation (20 TCs)</td><td>Week 2 · Days 1–3</td></tr>
+          <tr><td>Execution + Allure Reports</td><td>Week 2 · Days 4–5</td></tr>
+          <tr><td>STR Writing & Sign-off</td><td>Week 3 · Day 1</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="sub">8.0 · משאבים ותפקידים – Resources & Roles</h2>
+      <table class="info-table ltr">
+        <tbody>
+          <tr><td>QA Engineer / Author</td><td>Gil Kalman</td></tr>
+          <tr><td>Framework Developer</td><td>Gil Kalman</td></tr>
+          <tr><td>Tools</td><td>PyCharm · Playwright · pytest · Allure · Git · GitHub</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </div><!-- /stp -->
+
+  <!-- ══════════════════════════════ STD ══════════════════════════════ -->
+  <div class="doc-section" id="std">
+    <div class="section-header">
+      <div class="section-icon">📝</div>
+      <div>
+        <div class="section-title">Software Test Description – STD</div>
+        <div class="section-subtitle">תיאור מקרי הבדיקה | test_cases/test_saucedemo.py</div>
+      </div>
+      <div class="doc-tag">STD-SAUCEDEMO-001 · v1.0</div>
+    </div>
+    <div class="section-body">
+
+      <p class="section-intro">
+        כל מקרי הבדיקה שאובים מ-<span class="mono-tag">test_cases/test_saucedemo.py</span>.
+        הם מאורגנים ב-5 Classes עם <span class="mono-tag">@allure.suite</span> ונחלקים
+        ל-<strong>8 טסטי Smoke</strong> ו-<strong>12 טסטי Regression</strong>.
+        הצעדים הינם קריאות ל-<span class="mono-tag">WebFlows</span> ו-<span class="mono-tag">Page Objects</span> ישירות מהקוד.
+      </p>
+
+      <!-- TS-01 Login -->
+      <div class="suite-header">
+        <div class="suite-id">TS-01</div>
+        <div class="suite-title">Saucedemo – Login</div>
+        <div class="suite-meta">5 TCs · <span class="suite-file">class TestLogin</span></div>
+      </div>
+      <div class="tc-wrap">
+        <table class="tc-table">
+          <thead>
+            <tr><th>TC ID</th><th>Allure Title / Function</th><th>Marker</th><th>Preconditions</th><th>Test Steps</th><th>Expected Result</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="tc-id">TC-01-01</td>
+              <td>Valid login navigates to products page<span class="fn-name">test_valid_login</span></td>
+              <td><span class="badge badge-smoke">smoke</span></td>
+              <td>page navigated to base URL (SauceDemo)</td>
+              <td class="steps-col"><ol>
+                <li><code>web_workflow.login_valid()</code></li>
+                <li>→ fills <code>standard_user</code> / <code>secret_sauce</code></li>
+                <li>→ clicks <code>[data-test="login-button"]</code></li>
+              </ol></td>
+              <td><span class="assert-code">expect(page).to_have_url(".../inventory.html")</span></td>
+            </tr>
+            <tr>
+              <td class="tc-id">TC-01-02</td>
+              <td>Locked out user sees error message<span class="fn-name">test_locked_out_user</span></td>
+              <td><span class="badge badge-reg">regression</span></td>
+              <td>page navigated to base URL</td>
+              <td class="steps-col"><ol>
+                <li><code>web_workflow.login("locked_out_user", "secret_sauce")</code></li>
+              </ol></td>
+              <td><span class="assert-code">expect(login_page.error_message).to_be_visible()</span></td>
+            </tr>
+            <tr>
+              <td class="tc-id">TC-01-03</td>
+              <td>Invalid credentials shows error message<span class="fn-name">test_invalid_credentials</span></td>
+              <td><span class="badge badge-reg">regression</span></td>
+              <td>page navigated to base URL</td>
+              <td class="steps-col"><ol>
+                <li><code>web_workflow.login("wrong_user", "wrong_pass")</code></li>
+              </ol></td>
+              <td><span class="assert-code">expect(login_page.error_message).to_be_visible()</span></td>
+            </tr>
+            <tr>
+              <td class="tc-id">TC-01-04</td>
+              <td>Empty username shows error message<span class="fn-name">test_empty_username</span></td>
+              <td><span class="badge badge-reg">regression</span></td>
+              <td>page navigated to base URL</td>
+              <td class="steps-col"><ol>
+                <li><code>web_workflow.login("", "secret_sauce")</code></li>
+              </ol></td>
+              <td><span class="assert-code">expect(login_page.error_message).to_be_visible()</span></td>
+            </tr>
+            <tr>
+              <td class="tc-id">TC-01-05</td>
+              <td>Empty password shows error message<span class="fn-name">test_empty_password</span></td>
+              <td><span class="badge badge-reg">regression</span></td>
+              <td>page navigated to base URL</td>
+              <td class="steps-col"><ol>
+                <li><code>web_workflow.login("standard_user", "")</code></li>
+              </ol></td>
+              <td><span class="assert-code">expect(login_page.error_message).to_be_visible()</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TS-02 Products -->
+      <div class="suite-header">
+        <div class="suite-id">TS-02</div>
+        <div class="suite-title">Saucedemo – Products</div>
+        <div class="suite-meta">5 TCs · <span class="suite-file">class TestProducts</span> · autouse: login_valid()</div>
+      </div>
+      <div class="tc-wrap">
+        <table class="tc-table">
+          <thead>
+            <tr><th>TC ID</th><th>Allure Title / Function</th><th>Marker</th><th>Preconditions</th><th>Test Steps</th><th>Expected Result</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="tc-id">TC-02-01</td>
+              <td>Products page displays 6 items<span class="fn-name">test_product_count</span></td>
+              <td><span class="badge badge-smoke">smoke</span></td>
+              <td>Logged in as standard_user → /inventory.html</td>
+              <td class="steps-col"><ol>
+                <li>Count <code>[data-test="inventory-item"]</code> elements</li>
+              </ol></td>
+              <td><span class="assert-code">expect(inventory_items).to_have_count(6)</span></td>
+            </tr>
+            <tr>
+              <td class="tc-id">TC-02-02</td>
+              <td>Products page title is 'Products'<span class="fn-name">test_products_title</span></td>
+              <td><span class="badge badge-smoke">smoke</span></td>
+              <td>Logged in → /inventory.html</td>
+              <td class="steps-col"><ol>
+                <li>Read <code>[data-test="title"]</code> text</li>
+              </ol></td>
+              <td><span class="assert-code">expect(title).to_have_text("Products")</span></td>
+            </tr>
+            <tr>
+              <td class="tc-id">TC-02-03</td>
+              <td>Sort by Name Z to A<span class="fn-name">test_sort_name_z_to_a</span></td>
+              <td><span class="badge badge-reg">regression</span></td>
+              <td>Logged in → /inventory.html</td>
+              <td class="steps-col"><ol>
+                <li><code>inv.sort_by("Name (Z to A)")</code></li>
+                <li>Read <code>item_names.first.inner_text()</code></li>
+              </ol></td>
+              <td><span class="assert-code">== "Test.allTheThings() T-Shirt (Red)"</span></td>
+            </tr>
+            <tr>
+              <td class="tc-id">TC-02-04</td>
+              <td>Sort by Price low to high<span class="fn-name">test_sort_price_low_to_high</span></td>
+              <td><span class="badge badge-reg">regression</span></td>
+              <td>Logged in → /inventory.html</td>
+              <td class="steps-col"><ol>
+                <li><code>inv.sort_by("Price (low to high)")</code></li>
+                <li>Read <code>item_prices.first.inner_text()</code></li>
+              </ol></td>
+              <td><span class="assert-code">== "$7.99"</span></td>
+            </tr>
+            <tr>
+              <td class="tc-id">TC-02-05</td>
+              <td>Sort by Price high to low<span class="fn-name">test_sort_price_high_to_low</span></td>
+              <td><span class="badge badge-reg">regression</span></td>
+              <td>Logged in → /inventory.html</td>
+              <td class="steps-col"><ol>
+                <li><code>inv.sort_by("Price (high to low)")</code></li>
+                <li>Read <code>item_prices.first.inner_text()</code></li>
+              </ol></td>
+              <td><span class="assert-code">== "$49.99"</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TS-03 Cart -->
+      <div class="suite-header">
+        <div class="suite-id">TS-03</div>
+        <div class="suite-title">Saucedemo – Cart</div>
+        <div class="suite-meta">5 TCs · <span class="suite-file">class TestCart</span> · autouse: login_valid()</div>
+      </div>
+      <div class="tc-wrap">
+        <table class="tc-table">
+          <thead>
+            <tr><th>TC ID</th><th>Allure Title / Function</th><th>Marker</th><th>Preconditions</th><th>Test Steps</th><th>Expected Result</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="tc-id">TC-03-01</td>
+              <td>Cart badge shows 1 after adding one item<span class="fn-name">test_cart_badge_after_add</span></td>
+              <td><span class="badge badge-smoke">smoke</span></td>
+              <td>Logged in → /inventory.html</td>
+              <td class="steps-col"><ol>
+                <li><code>add_item_to_cart("sauce-labs-backpack")</code></li>
+                <li>→ clicks <code>[data-test="add-to-cart-sauce-labs-backpack"]</code></li>
+              </ol></td>
+              <td><span class="assert-code">expect(cart_badge).to_have_text("1")</span></td>
+            </tr>
+            <tr>
+              <td class="tc-id">TC-03-02</td>
+              <td>Cart badge shows 2 after adding two items<span class="fn-name">test_cart_badge_two_items</span></td>
+              <td><span class="badge badge-reg">regression</span></td>
+              <td>Logged in → /inventory.html</td>
+              <td class="steps-col"><ol>
+                <li><code>add_item_to_cart("sauce-labs-backpack")</code></li>
+                <li><code>add_item_to_cart("sauce-labs-bike-light")</code></li>
+              </ol></td>
+              <td><span class="assert-code">expect(cart_badge).to_have_text("2")</span></td>
+            </tr>
+            <tr>
+              <td class="tc-id">TC-03-03</td>
+              <td>Cart contains added item<span class="fn-name">test_cart_contains_item</span></td>
+              <td><span class="badge badge-smoke">smoke</span></td>
+              <td>Logged in → /inventory.html</td>
+              <td class="steps-col"><ol>
+                <li><code>add_item_to_cart("sauce-labs-backpack")</code></li>
+                <li><code>go_to_cart()</code> → /cart.html</li>
+                <li>Check items count and first item name</li>
+              </ol></td>
+              <td>
+                <span class="assert-code">expect(cart_items).to_have_count(1)</span><br>
+                <span class="assert-code">expect(item_names.first).to_have_text("Sauce Labs Backpack")</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tc-id">TC-03-04</td>
+              <td>Remove item from cart<span class="fn-name">test_remove_item_from_cart</span></td>
+              <td><span class="badge badge-reg">regression</span></td>
+              <td>Logged in → backpack in cart → /cart.html</td>
+              <td class="steps-col"><ol>
+                <li><code>add_item_to_cart("sauce-labs-backpack")</code></li>
+                <li><code>go_to_cart()</code></li>
+                <li><code>remove_item_from_cart("sauce-labs-backpack")</code></li>
+              </ol></td>
+              <td><span class="assert-code">expect(cart_items).to_have_count(0)</span></td>
+            </tr>
+            <tr>
+              <td class="tc-id">TC-03-05</td>
+              <td>Cart badge disappears after removing only item<span class="fn-name">test_cart_badge_disappears_after_remove</span></td>
+              <td><span class="badge badge-reg">regression</span></td>
+              <td>Logged in → /inventory.html</td>
+              <td class="steps-col"><ol>
+                <li><code>add_item_to_cart("sauce-labs-backpack")</code></li>
+                <li><code>remove_item_from_inventory("sauce-labs-backpack")</code></li>
+                <li>→ clicks <code>[data-test="remove-sauce-labs-backpack"]</code></li>
+              </ol></td>
+              <td><span class="assert-code">expect(cart_badge).not_to_be_visible()</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TS-04 Checkout -->
+      <div class="suite-header">
+        <div class="suite-id">TS-04</div>
+        <div class="suite-title">Saucedemo – Checkout</div>
+        <div class="suite-meta">4 TCs · <span class="suite-file">class TestCheckout</span> · autouse: login + add backpack + go_to_cart + proceed_to_checkout</div>
+      </div>
+      <div class="tc-wrap">
+        <table class="tc-table">
+          <thead>
+            <tr><th>TC ID</th><th>Allure Title / Function</th><th>Marker</th><th>Preconditions</th><th>Test Steps</th><th>Expected Result</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="tc-id">TC-04-01</td>
+              <td>Missing first name shows error<span class="fn-name">test_checkout_missing_first_name</span></td>
+              <td><span class="badge badge-reg">regression</span></td>
+              <td>At checkout step-one (login_and_add fixture)</td>
+              <td class="steps-col"><ol>
+                <li>Fill <code>last_name_field</code> = "User"</li>
+                <li>Fill <code>postal_code_field</code> = "12345"</li>
+                <li>Click <code>continue_btn</code></li>
+              </ol></td>
+              <td><span class="assert-code">expect(error_message).to_be_visible()</span></td>
+            </tr>
+            <tr>
+              <td class="tc-id">TC-04-02</td>
+              <td>Missing postal code shows error<span class="fn-name">test_checkout_missing_postal_code</span></td>
+              <td><span class="badge badge-reg">regression</span></td>
+              <td>At checkout step-one</td>
+              <td class="steps-col"><ol>
+                <li>Fill <code>first_name_field</code> = "Test"</li>
+                <li>Fill <code>last_name_field</code> = "User"</li>
+                <li>Click <code>continue_btn</code> (no postal code)</li>
+              </ol></td>
+              <td><span class="assert-code">expect(error_message).to_be_visible()</span></td>
+            </tr>
+            <tr>
+              <td class="tc-id">TC-04-03</td>
+              <td>Checkout step two – overview shows correct item total<span class="fn-name">test_checkout_overview_total</span></td>
+              <td><span class="badge badge-smoke">smoke</span></td>
+              <td>At checkout step-one (backpack = $29.99)</td>
+              <td class="steps-col"><ol>
+                <li><code>fill_checkout_info("Test","User","12345")</code></li>
+                <li>→ fills all fields + clicks Continue → step-two</li>
+                <li>Read <code>[data-test="subtotal-label"]</code></li>
+              </ol></td>
+              <td><span class="assert-code">expect(subtotal_label).to_contain_text("29.99")</span></td>
+            </tr>
+            <tr>
+              <td class="tc-id">TC-04-04</td>
+              <td>E2E – complete purchase shows confirmation<span class="fn-name">test_complete_purchase</span></td>
+              <td><span class="badge badge-smoke">smoke</span></td>
+              <td>At checkout step-one</td>
+              <td class="steps-col"><ol>
+                <li><code>fill_checkout_info("Test","User","12345")</code></li>
+                <li><code>finish_order()</code> → clicks <code>[data-test="finish"]</code></li>
+              </ol></td>
+              <td>
+                <span class="assert-code">expect(complete_header).to_have_text("Thank you for your order!")</span><br>
+                <span class="assert-code">expect(page).to_have_url(".../checkout-complete.html")</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TS-05 Navigation -->
+      <div class="suite-header">
+        <div class="suite-id">TS-05</div>
+        <div class="suite-title">Saucedemo – Navigation</div>
+        <div class="suite-meta">1 TC · <span class="suite-file">class TestNavigation</span> · autouse: login_valid()</div>
+      </div>
+      <div class="tc-wrap">
+        <table class="tc-table">
+          <thead>
+            <tr><th>TC ID</th><th>Allure Title / Function</th><th>Marker</th><th>Preconditions</th><th>Test Steps</th><th>Expected Result</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="tc-id">TC-05-01</td>
+              <td>Logout redirects to login page<span class="fn-name">test_logout</span></td>
+              <td><span class="badge badge-smoke">smoke</span></td>
+              <td>Logged in → /inventory.html</td>
+              <td class="steps-col"><ol>
+                <li><code>web_workflow.logout()</code></li>
+                <li>→ clicks <code>#react-burger-menu-btn</code></li>
+                <li>→ clicks <code>[data-test="logout-sidebar-link"]</code></li>
+              </ol></td>
+              <td>
+                <span class="assert-code">expect(page).to_have_url("https://www.saucedemo.com/")</span><br>
+                <span class="assert-code">expect(login_button).to_be_visible()</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div><!-- /std -->
+
+  <!-- ══════════════════════════════ STR ══════════════════════════════ -->
+  <div class="doc-section" id="str">
+    <div class="section-header">
+      <div class="section-icon">📊</div>
+      <div>
+        <div class="section-title">Software Test Report – STR</div>
+        <div class="section-subtitle">דוח תוצאות ביצוע הבדיקות | SauceDemo E-Commerce Platform</div>
+      </div>
+      <div class="doc-tag">STR-SAUCEDEMO-001 · v1.0</div>
+    </div>
+    <div class="section-body">
+
+      <p class="section-intro">
+        הבדיקות בוצעו ב-Chromium עם <span class="mono-tag">standard_user</span> כמשתמש ראשי.
+        כל 20 מקרי הבדיקה בוצעו בהצלחה.
+        <strong>תאריך ביצוע: אפריל 2026.</strong>
+      </p>
+
+      <!-- Metrics -->
+      <div class="metrics-grid">
+        <div class="metric-card mc-total">
+          <div class="mn ltr">20</div>
+          <div class="ml">סה"כ מקרי בדיקה</div>
+          <div class="mp ltr" style="color:var(--primary)">Total Test Cases</div>
+        </div>
+        <div class="metric-card mc-smoke">
+          <div class="mn ltr">8</div>
+          <div class="ml">Smoke Tests</div>
+          <div class="mp ltr" style="color:var(--smoke-c)">@pytest.mark.smoke</div>
+        </div>
+        <div class="metric-card mc-reg">
+          <div class="mn ltr">12</div>
+          <div class="ml">Regression Tests</div>
+          <div class="mp ltr" style="color:var(--reg-c)">@pytest.mark.regression</div>
+        </div>
+        <div class="metric-card mc-pass">
+          <div class="mn ltr">20</div>
+          <div class="ml">עברו בהצלחה</div>
+          <div class="mp ltr" style="color:var(--success)">100% Pass Rate ✓</div>
+        </div>
+      </div>
+
+      <!-- Overall bar -->
+      <div class="bar-chart">
+        <div class="bar-chart-title">התפלגות תוצאות הבדיקה</div>
+        <div class="bar-track">
+          <div class="bar-seg" style="width:100%;background:var(--success);">100% PASS</div>
+        </div>
+        <div class="bar-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--success)"></div>Pass (20 / 20)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div>Fail (0)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--blocked)"></div>Blocked (0)</div>
+        </div>
+      </div>
+
+      <!-- Per-suite -->
+      <h2 class="sub">תוצאות לפי חבילת בדיקה – Per Suite</h2>
+      <div style="direction:ltr;">
+        <div class="suite-bar-row">
+          <div class="suite-bar-label">TS-01 Login (5)</div>
+          <div class="suite-bar-track"><div class="suite-bar-fill" style="width:100%"></div></div>
+          <div class="suite-bar-pct">5 / 5</div>
+        </div>
+        <div class="suite-bar-row">
+          <div class="suite-bar-label">TS-02 Products (5)</div>
+          <div class="suite-bar-track"><div class="suite-bar-fill" style="width:100%"></div></div>
+          <div class="suite-bar-pct">5 / 5</div>
+        </div>
+        <div class="suite-bar-row">
+          <div class="suite-bar-label">TS-03 Cart (5)</div>
+          <div class="suite-bar-track"><div class="suite-bar-fill" style="width:100%"></div></div>
+          <div class="suite-bar-pct">5 / 5</div>
+        </div>
+        <div class="suite-bar-row">
+          <div class="suite-bar-label">TS-04 Checkout (4)</div>
+          <div class="suite-bar-track"><div class="suite-bar-fill" style="width:100%"></div></div>
+          <div class="suite-bar-pct">4 / 4</div>
+        </div>
+        <div class="suite-bar-row">
+          <div class="suite-bar-label">TS-05 Navigation (1)</div>
+          <div class="suite-bar-track"><div class="suite-bar-fill" style="width:100%"></div></div>
+          <div class="suite-bar-pct">1 / 1</div>
+        </div>
+      </div>
+
+      <!-- Detailed results -->
+      <h2 class="sub" style="margin-top:32px;">תוצאות מפורטות – Detailed Execution Results</h2>
+      <div class="tc-wrap">
+        <table class="res-table">
+          <thead>
+            <tr><th>TC ID</th><th>Allure Title</th><th>Suite</th><th>Marker</th><th>Status</th><th>Actual Result</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="tc-id">TC-01-01</td><td>Valid login navigates to products page</td><td>TS-01</td><td><span class="badge badge-smoke">smoke</span></td><td><span class="badge badge-pass">PASS</span></td><td>Redirected to /inventory.html ✓</td></tr>
+            <tr><td class="tc-id">TC-01-02</td><td>Locked out user sees error message</td><td>TS-01</td><td><span class="badge badge-reg">regression</span></td><td><span class="badge badge-pass">PASS</span></td><td>Error message visible on login page ✓</td></tr>
+            <tr><td class="tc-id">TC-01-03</td><td>Invalid credentials shows error message</td><td>TS-01</td><td><span class="badge badge-reg">regression</span></td><td><span class="badge badge-pass">PASS</span></td><td>Error message visible ✓</td></tr>
+            <tr><td class="tc-id">TC-01-04</td><td>Empty username shows error message</td><td>TS-01</td><td><span class="badge badge-reg">regression</span></td><td><span class="badge badge-pass">PASS</span></td><td>Validation error triggered ✓</td></tr>
+            <tr><td class="tc-id">TC-01-05</td><td>Empty password shows error message</td><td>TS-01</td><td><span class="badge badge-reg">regression</span></td><td><span class="badge badge-pass">PASS</span></td><td>Validation error triggered ✓</td></tr>
+            <tr><td class="tc-id">TC-02-01</td><td>Products page displays 6 items</td><td>TS-02</td><td><span class="badge badge-smoke">smoke</span></td><td><span class="badge badge-pass">PASS</span></td><td>inventory-item count = 6 ✓</td></tr>
+            <tr><td class="tc-id">TC-02-02</td><td>Products page title is 'Products'</td><td>TS-02</td><td><span class="badge badge-smoke">smoke</span></td><td><span class="badge badge-pass">PASS</span></td><td>title text = "Products" ✓</td></tr>
+            <tr><td class="tc-id">TC-02-03</td><td>Sort by Name Z to A</td><td>TS-02</td><td><span class="badge badge-reg">regression</span></td><td><span class="badge badge-pass">PASS</span></td><td>First item = "Test.allTheThings() T-Shirt (Red)" ✓</td></tr>
+            <tr><td class="tc-id">TC-02-04</td><td>Sort by Price low to high</td><td>TS-02</td><td><span class="badge badge-reg">regression</span></td><td><span class="badge badge-pass">PASS</span></td><td>First price = "$7.99" ✓</td></tr>
+            <tr><td class="tc-id">TC-02-05</td><td>Sort by Price high to low</td><td>TS-02</td><td><span class="badge badge-reg">regression</span></td><td><span class="badge badge-pass">PASS</span></td><td>First price = "$49.99" ✓</td></tr>
+            <tr><td class="tc-id">TC-03-01</td><td>Cart badge shows 1 after adding one item</td><td>TS-03</td><td><span class="badge badge-smoke">smoke</span></td><td><span class="badge badge-pass">PASS</span></td><td>cart_badge text = "1" ✓</td></tr>
+            <tr><td class="tc-id">TC-03-02</td><td>Cart badge shows 2 after adding two items</td><td>TS-03</td><td><span class="badge badge-reg">regression</span></td><td><span class="badge badge-pass">PASS</span></td><td>cart_badge text = "2" ✓</td></tr>
+            <tr><td class="tc-id">TC-03-03</td><td>Cart contains added item</td><td>TS-03</td><td><span class="badge badge-smoke">smoke</span></td><td><span class="badge badge-pass">PASS</span></td><td>count = 1; name = "Sauce Labs Backpack" ✓</td></tr>
+            <tr><td class="tc-id">TC-03-04</td><td>Remove item from cart</td><td>TS-03</td><td><span class="badge badge-reg">regression</span></td><td><span class="badge badge-pass">PASS</span></td><td>cart_items count = 0 ✓</td></tr>
+            <tr><td class="tc-id">TC-03-05</td><td>Cart badge disappears after removing only item</td><td>TS-03</td><td><span class="badge badge-reg">regression</span></td><td><span class="badge badge-pass">PASS</span></td><td>cart_badge not_to_be_visible() ✓</td></tr>
+            <tr><td class="tc-id">TC-04-01</td><td>Missing first name shows error</td><td>TS-04</td><td><span class="badge badge-reg">regression</span></td><td><span class="badge badge-pass">PASS</span></td><td>Error message visible on step-one ✓</td></tr>
+            <tr><td class="tc-id">TC-04-02</td><td>Missing postal code shows error</td><td>TS-04</td><td><span class="badge badge-reg">regression</span></td><td><span class="badge badge-pass">PASS</span></td><td>Error message visible on step-one ✓</td></tr>
+            <tr><td class="tc-id">TC-04-03</td><td>Overview shows correct item total</td><td>TS-04</td><td><span class="badge badge-smoke">smoke</span></td><td><span class="badge badge-pass">PASS</span></td><td>subtotal_label contains "29.99" ✓</td></tr>
+            <tr><td class="tc-id">TC-04-04</td><td>E2E – complete purchase shows confirmation</td><td>TS-04</td><td><span class="badge badge-smoke">smoke</span></td><td><span class="badge badge-pass">PASS</span></td><td>complete_header = "Thank you for your order!" · URL = /checkout-complete.html ✓</td></tr>
+            <tr><td class="tc-id">TC-05-01</td><td>Logout redirects to login page</td><td>TS-05</td><td><span class="badge badge-smoke">smoke</span></td><td><span class="badge badge-pass">PASS</span></td><td>URL = saucedemo.com/ · login_button visible ✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- No defects -->
+      <h2 class="sub" style="margin-top:32px;">יומן ליקויים – Defect Log</h2>
+      <div class="no-defects">
+        <div class="no-defects-icon">✅</div>
+        <div>
+          <h3>אין ליקויים פתוחים – No Defects Found</h3>
+          <p>
+            כלל 20 מקרי הבדיקה עברו בהצלחה. לא אותרו ליקויים פונקציונליים
+            בסבב זה עבור <span class="mono-tag">standard_user</span>.
+            הסביבה הייתה יציבה לאורך כל ריצת הבדיקות.
+          </p>
+        </div>
+      </div>
+
+      <!-- Conclusion -->
+      <div class="conclusion-box">
+        <h3>📌 סיכום ומסקנות – Summary & Conclusions</h3>
+        <ul>
+          <li>סבב הבדיקות הושלם בהצלחה מלאה — <strong>20/20 PASS (100%)</strong>, מעל קריטריון היציאה.</li>
+          <li>כל 8 טסטי Smoke עברו — ניתן להמשיך לסביבת UAT.</li>
+          <li>כל 12 טסטי Regression עברו — תהליכי גבול ו-negative מאומתים.</li>
+          <li>ה-framework (Playwright + POM + WebFlows + Allure) פעל בצורה תקינה ויציבה.</li>
+          <li>תשתית ה-conftest כוללת צילומי מסך אוטומטיים, Traces ו-Console logs לכל כשל עתידי.</li>
+          <li><strong>המלצה:</strong> מאשר שחרור. אין ממצאים חוסמים.</li>
+        </ul>
+      </div>
+
+      <!-- Sign-off -->
+      <div class="signoff">
+        <div class="signoff-avatar">GK</div>
+        <div>
+          <div class="signoff-name">גיל קלמן · Gil Kalman</div>
+          <div class="signoff-role">Quality Assurance Engineer · Automation Testing</div>
+        </div>
+        <div class="signoff-date">
+          Execution Date: April 2026<br>
+          Report Version: 1.0 · Final
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /str -->
+
+</main>
+
+<!-- ═══════════════════════════ FOOTER ═══════════════════════════ -->
+<footer>
+  <div><strong>גיל קלמן · Gil Kalman</strong> &nbsp;|&nbsp; Quality Assurance Engineer</div>
+  <div style="margin-top:6px;color:rgba(255,255,255,.55);font-size:13px;direction:ltr;">
+    SauceDemo Automation Testing Portfolio · Playwright · pytest · Allure · POM · April 2026
+  </div>
+  <div class="footer-links">
+    <a href="#stp">Software Test Plan</a>
+    <a href="#std">Software Test Description</a>
+    <a href="#str">Software Test Report</a>
+  </div>
+</footer>
+
+<script>
+  const sections = document.querySelectorAll('.doc-section');
+  const navLinks = document.querySelectorAll('nav a');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const a = document.querySelector('nav a[href="#' + e.target.id + '"]');
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { threshold: 0.25 });
+  sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>
