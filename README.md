@@ -24,11 +24,10 @@ A **production-ready automation framework** with AI-powered test maintenance, sc
 ---
 
 ## Manual & Automation STP
-    ## 🔗 Links
-- [ Automation ](https://gilkalman-portfolio.github.io/gil-kalman.github.io/)
+- [ Automation STP ](https://gilkalman-portfolio.github.io/gil-kalman.github.io/)
     
-- [ Manual ](https://gilkalman-portfolio.github.io/gil-kalman.github.io/manual,html)
-    ##
+- [ Manual STP ](https://gilkalman-portfolio.github.io/gil-kalman.github.io/manual,html)
+
 
 ## Overview
 
