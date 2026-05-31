@@ -2,15 +2,30 @@ import uuid
 
 import pytest
 import allure
+import requests
 
 from workflows.api_workflow import APIFlows
+
+API_BASE = "https://gorest.co.in/public/v2"
+
+
+def _api_reachable() -> bool:
+    try:
+        resp = requests.get(f"{API_BASE}/users", timeout=5)
+        return resp.status_code != 403
+    except requests.RequestException:
+        return False
 
 
 def _unique_email() -> str:
     return f"test_{uuid.uuid4().hex[:8]}@testing.com"
 
 
+_skip_reason = "GoRest API not reachable (Cloudflare block)"
+
+
 @allure.suite("GoRest API – Users")
+@pytest.mark.skipif(not _api_reachable(), reason=_skip_reason)
 class TestUsersAPI:
 
     @allure.title("GET /users returns a list of users")
