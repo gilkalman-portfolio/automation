@@ -5,6 +5,9 @@
 # - Optional tag filtering via <tags> in data.xml
 from __future__ import annotations
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from utilities.logger import get_logger
 import logging
 import os
@@ -15,6 +18,7 @@ from uuid import uuid4
 import pytest
 from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright
 from workflows.web_workflow import WebFlows
+from workflows.api_workflow import APIFlows
 from utilities.config_loader import load_config
 
 @pytest.fixture(scope="session")
@@ -261,6 +265,12 @@ def page(context: BrowserContext, base_url: str) -> Page:
 def web_workflow(page):
     return WebFlows(page)
 
+@pytest.fixture
+def api_workflow(test_cfg):
+    api_url = test_cfg.get("api_url", "https://gorest.co.in/public/v2")
+    token = os.getenv("GOREST_TOKEN", "")
+    return APIFlows(api_url, token)
+
 @pytest.fixture(scope="function")
 def logger(request) -> logging.Logger:
     """
@@ -270,21 +280,21 @@ def logger(request) -> logging.Logger:
     return get_logger(test_name)
 
 @pytest.fixture(scope="function", autouse=True)
-def capture_console_logs(page: Page, logger: logging.Logger):
-    """
-    Captures browser console logs (console.log / error / warn / info)
-    and writes them into the per-test logger.
-    """
+def capture_console_logs(request, logger: logging.Logger):
+    if "page" not in request.fixturenames:
+        yield
+        return
+
+    page: Page = request.getfixturevalue("page")
+
     def _log_console(msg):
         try:
             logger.info(f"[CONSOLE] {msg.type()} - {msg.text()}")
         except Exception:
-            # Don't fail a test due to a logging issue
             pass
 
     page.on("console", _log_console)
     yield
-    # No special teardown is needed – the page is closed by the existing fixture.
 
 # -----------------------------
 # Failure hooks

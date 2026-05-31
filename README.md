@@ -34,6 +34,7 @@ A **production-ready automation framework** with AI-powered test maintenance, sc
 This project demonstrates **professional-grade automation testing** with:
 
 - **Clean, production-style code** with Page Object Model + Workflows separation
+- **UI + API testing** — Playwright for browser tests, requests-based API layer for REST endpoints
 - **XML-based configuration** for flexible, code-free environment management
 - **AI Agent** that automatically analyses and fixes failing tests
 - **Scheduled CI** via GitHub Actions (runs daily, reports to Telegram)
@@ -73,6 +74,7 @@ This project demonstrates **professional-grade automation testing** with:
 | **Language** | Python 3.12+ |
 | **Test Runner** | Pytest |
 | **Browser Automation** | Playwright |
+| **API Testing** | Requests + GoRest API |
 | **Test Design** | Page Objects + Workflows |
 | **Config System** | XML (`data.xml`) + `config_loader.py` |
 | **Reporting** | Allure + Markdown (`reports/`) |
@@ -106,16 +108,19 @@ automation/
 │   ├── cart_page.py
 │   └── checkout_page.py
 │
+├── api_objects/
+│   └── users_api.py             # API Object for GoRest /users endpoints
+│
 ├── workflows/
 │   ├── web_workflow.py          # UI workflows (login, cart, checkout…)
-│   └── api_workflow.py
+│   └── api_workflow.py          # API workflows (CRUD user flows)
 │
 ├── test_cases/
 │   ├── conftest.py              # Fixtures, browser setup, trace/screenshot
-│   ├── test_saucedemo.py        # 20 E2E tests (Login, Products, Cart…)
+│   ├── test_saucedemo.py        # 20 UI tests (Login, Products, Cart…)
+│   ├── test_api.py              # 10 API tests (Users CRUD, validation)
 │   ├── test_login.py
-│   ├── test_web.py
-│   └── test_api.py
+│   └── test_web.py
 │
 ├── reports/                     # Generated Markdown reports
 ├── requirements.txt
@@ -153,6 +158,7 @@ Create a `.env` file in the project root:
 ANTHROPIC_API_KEY=sk-ant-...        # required only for --ai-fix
 TELEGRAM_BOT_TOKEN=123456:ABC...    # required for Telegram notifications
 TELEGRAM_CHAT_ID=-100123456789      # your chat or group ID
+GOREST_TOKEN=your_token_here        # free token from gorest.co.in
 ```
 
 ---
@@ -172,7 +178,7 @@ Edit `configuration/data.xml` to control runtime behaviour:
     <screenshot>only-on-failure</screenshot>
   </run>
   <environments>
-    <stg baseUrl="https://www.saucedemo.com/"/>
+    <stg baseUrl="https://www.saucedemo.com/" apiUrl="https://gorest.co.in/public/v2"/>
   </environments>
 </config>
 ```
@@ -196,6 +202,7 @@ pytest
 ```bash
 pytest -m smoke
 pytest -m regression
+pytest -m api
 ```
 
 ### Run with Allure report

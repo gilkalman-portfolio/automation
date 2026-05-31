@@ -76,8 +76,10 @@ def load_config(xml_path: Optional[str] = None, *, reload: bool = False) -> Dict
     if base_url_raw.lower() == "auto":
         env_node = root.find(f'./environments/{env_name}')
         base_url = env_node.get("baseUrl") if env_node is not None else None
+        api_url = env_node.get("apiUrl") if env_node is not None else None
     else:
         base_url = base_url_raw
+        api_url = None
 
     headless = _as_bool(run.findtext("headless"))
     browsers = _split_list(run.findtext("browsers"))
@@ -94,6 +96,7 @@ def load_config(xml_path: Optional[str] = None, *, reload: bool = False) -> Dict
         env_name = env_override.strip()
 
     base_url = os.getenv("TEST_BASE_URL", base_url)
+    api_url = os.getenv("TEST_API_URL", api_url)
     headless = _as_bool(os.getenv("TEST_HEADLESS", str(headless)))
     env_browsers = os.getenv("TEST_BROWSERS")
     env_devices = os.getenv("TEST_DEVICES")
@@ -136,6 +139,7 @@ def load_config(xml_path: Optional[str] = None, *, reload: bool = False) -> Dict
         "enabled": _as_bool(run.findtext("enabled")),
         "env": env_name,
         "base_url": base_url,
+        "api_url": api_url,
         "headless": bool(headless),
         "browsers": browsers,
         "devices": devices,

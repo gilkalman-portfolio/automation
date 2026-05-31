@@ -15,7 +15,7 @@
   </run>
 
   <environments>
-    <stg  baseUrl="https://www.saucedemo.com/"/>
+    <stg  baseUrl="https://www.saucedemo.com/" apiUrl="https://gorest.co.in/public/v2"/>
     <prod baseUrl="https://example.com"/>
   </environments>
 
