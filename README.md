@@ -119,6 +119,7 @@ automation/
 │   ├── conftest.py              # Fixtures, browser setup, trace/screenshot
 │   ├── test_saucedemo.py        # 20 UI tests (Login, Products, Cart…)
 │   ├── test_api.py              # 10 API tests (Users CRUD, validation)
+│   ├── test_selectors.py        # 24 Page Object selector validation tests
 │   ├── test_login.py
 │   └── test_web.py
 │
