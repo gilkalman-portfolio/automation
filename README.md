@@ -37,6 +37,7 @@ This project demonstrates **professional-grade automation testing** with:
 - **UI + API testing** — Playwright for browser tests, requests-based API layer for REST endpoints
 - **XML-based configuration** for flexible, code-free environment management
 - **AI Agent** that automatically analyses and fixes failing tests
+- **AI Report Analysis** — Claude Sonnet reads each report and sends actionable insights to Telegram
 - **Scheduled CI** via GitHub Actions (runs daily, reports to Telegram)
 - **Comprehensive reporting** with Allure + Markdown reports
 
@@ -55,10 +56,16 @@ This project demonstrates **professional-grade automation testing** with:
 - Re-runs only the failed tests after fixing to verify
 - Opt-in via `--ai-fix` flag — never runs without explicit permission
 
+### AI Report Analysis
+- **Claude Sonnet** (`claude-sonnet-4-6`) reads the generated report after each run
+- Identifies root cause, failure patterns, and provides a concrete recommendation
+- Delivered as a separate Telegram message immediately after the summary
+- Opt-in via `--ai-analysis` flag — never runs without explicit permission
+
 ### Scheduled CI with Telegram Notifications
 - GitHub Actions workflow runs every day at 02:00 UTC
-- Manual dispatch available from GitHub UI (with marker filter)
-- Sends a summary message + full Markdown report to a Telegram bot
+- Manual dispatch available from GitHub UI (with marker filter and AI toggles)
+- Sends a summary message, optional AI analysis, and full Markdown report to Telegram
 
 ### Clean Architecture
 - **Page Objects + Workflows** design pattern
@@ -79,6 +86,7 @@ This project demonstrates **professional-grade automation testing** with:
 | **Config System** | XML (`data.xml`) + `config_loader.py` |
 | **Reporting** | Allure + Markdown (`reports/`) |
 | **AI Fix Agent** | Claude Agent SDK (`claude-haiku-4-5`) |
+| **AI Analysis** | Claude Sonnet (`claude-sonnet-4-6`) via Anthropic API |
 | **CI/CD** | GitHub Actions (scheduled + manual dispatch) |
 | **Notifications** | Telegram Bot API |
 
@@ -156,7 +164,7 @@ Create a `.env` file in the project root:
 
 ```bash
 # .env — never commit this file
-ANTHROPIC_API_KEY=sk-ant-...        # required only for --ai-fix
+ANTHROPIC_API_KEY=sk-ant-...        # required for --ai-fix and --ai-analysis
 TELEGRAM_BOT_TOKEN=123456:ABC...    # required for Telegram notifications
 TELEGRAM_CHAT_ID=-100123456789      # your chat or group ID
 GOREST_TOKEN=your_token_here        # free token from gorest.co.in
@@ -223,7 +231,8 @@ allure serve allure-results
 2. If failures + --ai-fix → Claude Agent analyses and fixes
 3. Re-run only the failed tests to verify fixes
 4. Generate Markdown report → reports/report_YYYYMMDD_HHMMSS.md
-5. Send summary + report file to Telegram
+5. If --ai-analysis → Claude Sonnet reads the report and produces insights
+6. Send summary + AI analysis (optional) + report file to Telegram
 ```
 
 ### Commands
@@ -237,6 +246,12 @@ python automated_test_runner.py -m smoke
 
 # With AI auto-fix (requires ANTHROPIC_API_KEY)
 python automated_test_runner.py --ai-fix
+
+# With AI report analysis sent to Telegram (requires ANTHROPIC_API_KEY)
+python automated_test_runner.py --ai-analysis
+
+# Both flags together
+python automated_test_runner.py --ai-fix --ai-analysis
 
 # Scheduled loop every 24 hours (local)
 python automated_test_runner.py --schedule
@@ -277,12 +292,13 @@ The workflow `.github/workflows/scheduled_test_runner.yml` runs automatically:
 |--------|---------|
 | `TELEGRAM_BOT_TOKEN` | Telegram bot token from @BotFather |
 | `TELEGRAM_CHAT_ID` | Target chat / group ID |
-| `ANTHROPIC_API_KEY` | Claude API key (only needed with `ai_fix=true`) |
+| `ANTHROPIC_API_KEY` | Claude API key (required for `ai_fix=true` and `ai_analysis=true`) |
 
 ### Manual dispatch options
 
 - **marker** — filter tests: `smoke` / `regression` / `sanity` / blank (all)
-- **ai_fix** — `true` to enable Claude AI fixing (requires `ANTHROPIC_API_KEY`)
+- **ai_fix** — `true` to enable Claude AI auto-fixing (requires `ANTHROPIC_API_KEY`)
+- **ai_analysis** — `true` to enable Claude Sonnet report analysis sent to Telegram (requires `ANTHROPIC_API_KEY`)
 
 ---
 

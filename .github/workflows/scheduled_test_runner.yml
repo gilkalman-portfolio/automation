@@ -31,6 +31,14 @@ on:
         options:
           - 'false'
           - 'true'
+      ai_analysis:
+        description: 'Enable Claude Sonnet to analyze the report and send insights to Telegram'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Permissions — needed to push the report back to the repo
@@ -101,6 +109,12 @@ jobs:
           AI_FIX="${{ github.event.inputs.ai_fix }}"
           if [ "$AI_FIX" = "true" ] && [ -n "$ANTHROPIC_API_KEY" ]; then
             ARGS="$ARGS --ai-fix"
+          fi
+
+          # Enable AI analysis only when explicitly requested AND the secret exists
+          AI_ANALYSIS="${{ github.event.inputs.ai_analysis }}"
+          if [ "$AI_ANALYSIS" = "true" ] && [ -n "$ANTHROPIC_API_KEY" ]; then
+            ARGS="$ARGS --ai-analysis"
           fi
 
           python automated_test_runner.py $ARGS

@@ -367,10 +367,62 @@ def generate_report(
 
 
 # ---------------------------------------------------------------------------
+# AI report analysis
+# ---------------------------------------------------------------------------
+
+def analyze_report_with_claude(report_path: Path) -> str:
+    """
+    Send the test report to Claude Sonnet for analysis.
+    Returns the analysis text, or empty string on error / missing key.
+    """
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    if not api_key:
+        print("   ℹ️  AI analysis: no ANTHROPIC_API_KEY — skipping")
+        return ""
+
+    report_text = report_path.read_text(encoding="utf-8")
+    if len(report_text) > 15_000:
+        report_text = report_text[:15_000] + "\n... (truncated)"
+
+    prompt = (
+        "You are analyzing a pytest automation test report. "
+        "Provide a concise, actionable analysis in English.\n\n"
+        "Focus on:\n"
+        "1. **Root cause** — what is actually causing the failures (not just 'tests failed')\n"
+        "2. **Pattern** — are failures related (same root cause) or independent?\n"
+        "3. **Recommendation** — one concrete next step to fix or investigate\n\n"
+        "Keep the analysis under 200 words. Be specific and technical. "
+        "Do not repeat the numbers — focus on WHY and WHAT TO DO.\n\n"
+        f"Test Report:\n{report_text}"
+    )
+
+    try:
+        resp = requests.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            json={
+                "model": "claude-sonnet-4-6",
+                "max_tokens": 400,
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            timeout=30,
+        )
+        resp.raise_for_status()
+        return resp.json()["content"][0]["text"]
+    except Exception as exc:
+        print(f"   ⚠️  AI analysis: API error — {exc}")
+        return ""
+
+
+# ---------------------------------------------------------------------------
 # Telegram notifications
 # ---------------------------------------------------------------------------
 
-def send_telegram(report_path: Path, initial_report: dict, final_report: dict) -> None:
+def send_telegram(report_path: Path, initial_report: dict, final_report: dict, analysis: str = "") -> None:
     """
     Send a summary message + the report file to Telegram.
     Reads TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID from environment.
@@ -425,7 +477,22 @@ def send_telegram(report_path: Path, initial_report: dict, final_report: dict) -
         print(f"   ⚠️  Telegram: failed to send message — {exc}")
         return
 
-    # ── 2. Send the full report file ──────────────────────────────────────
+    # ── 2. Send the AI analysis (if available) ────────────────────────────
+    if analysis:
+        safe_analysis = analysis.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        analysis_msg = f"<b>🧠 AI Analysis</b>\n\n{safe_analysis}"
+        try:
+            resp = requests.post(
+                f"{base_url}/sendMessage",
+                json={"chat_id": chat_id, "text": analysis_msg, "parse_mode": "HTML"},
+                timeout=15,
+            )
+            resp.raise_for_status()
+            print("   ✅ Telegram: AI analysis sent")
+        except Exception as exc:
+            print(f"   ⚠️  Telegram: failed to send AI analysis — {exc}")
+
+    # ── 3. Send the full report file ──────────────────────────────────────
     try:
         with open(report_path, "rb") as fh:
             resp = requests.post(
@@ -444,7 +511,7 @@ def send_telegram(report_path: Path, initial_report: dict, final_report: dict) -
 # Main cycle
 # ---------------------------------------------------------------------------
 
-async def run_cycle(marker: str | None = None, ai_fix: bool = False) -> Path:
+async def run_cycle(marker: str | None = None, ai_fix: bool = False, ai_analysis: bool = False) -> Path:
     """
     Execute one full cycle:
       run → (fix with AI if failures + ai_fix=True) → re-run → report
@@ -460,7 +527,8 @@ async def run_cycle(marker: str | None = None, ai_fix: bool = False) -> Path:
     sep = "=" * 60
     print(f"\n{sep}")
     print(f"  🚀  Test Run: {run_id}" + (f"  [-m {marker}]" if marker else ""))
-    print(f"  AI fix: {'enabled' if ai_fix else 'disabled'}")
+    print(f"  AI fix:      {'enabled' if ai_fix else 'disabled'}")
+    print(f"  AI analysis: {'enabled' if ai_analysis else 'disabled'}")
     print(sep)
     check_dependencies()
 
@@ -522,9 +590,15 @@ async def run_cycle(marker: str | None = None, ai_fix: bool = False) -> Path:
     report_path = generate_report(run_id, initial_report, final_report, fix_summary, run_dir)
     print(f"   → {report_path}")
 
-    # ── Step 5: send Telegram notification ───────────────────────────────
+    # ── Step 5: AI analysis ───────────────────────────────────────────────
+    analysis = ""
+    if ai_analysis:
+        print("\n🧠 Step 5 — Generating AI analysis with Claude Sonnet …")
+        analysis = analyze_report_with_claude(report_path)
+
+    # ── Step 6: send Telegram notification ───────────────────────────────
     print("\n📨 Sending Telegram notification …")
-    send_telegram(report_path, initial_report, final_report)
+    send_telegram(report_path, initial_report, final_report, analysis=analysis)
 
     return report_path
 
@@ -563,10 +637,16 @@ def main() -> None:
         default=False,
         help="Enable Claude AI to auto-fix failing tests (requires ANTHROPIC_API_KEY)",
     )
+    parser.add_argument(
+        "--ai-analysis",
+        action="store_true",
+        default=False,
+        help="Enable Claude Sonnet to analyze the report and send insights to Telegram (requires ANTHROPIC_API_KEY)",
+    )
     args = parser.parse_args()
 
     async def _run() -> Path:
-        return await run_cycle(marker=args.marker, ai_fix=args.ai_fix)
+        return await run_cycle(marker=args.marker, ai_fix=args.ai_fix, ai_analysis=args.ai_analysis)
 
     if args.schedule:
         interval_sec = int(args.interval_hours * 3600)
