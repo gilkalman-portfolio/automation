@@ -111,8 +111,8 @@ jobs:
             ARGS="$ARGS --ai-fix"
           fi
 
-          # Enable AI analysis only when explicitly requested AND the secret exists
-          AI_ANALYSIS="${{ github.event.inputs.ai_analysis }}"
+          # Enable AI analysis: manual input takes priority, falls back to repository variable
+          AI_ANALYSIS="${{ github.event.inputs.ai_analysis || vars.AI_ANALYSIS_ENABLED }}"
           if [ "$AI_ANALYSIS" = "true" ] && [ -n "$ANTHROPIC_API_KEY" ]; then
             ARGS="$ARGS --ai-analysis"
           fi
