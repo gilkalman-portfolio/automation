@@ -221,6 +221,11 @@ def _outcomes(report: dict) -> tuple[int, int, int, int]:
     return passed, failed, error, skipped
 
 
+def _no_tests_ran(report: dict) -> bool:
+    """True when pytest collected nothing or crashed before running (not a pass)."""
+    return not report.get("tests") or bool(report.get("errors"))
+
+
 def generate_report(
     run_id: str,
     initial_report: dict,
@@ -246,7 +251,9 @@ def generate_report(
     fixed_count = len(initial_failures) - len(final_failures)
     still_failing = len(final_failures)
 
-    if still_failing == 0:
+    if _no_tests_ran(initial_report) and not final_failures:
+        status_badge = "🚨 NO TESTS RAN (collection/config error)"
+    elif still_failing == 0:
         status_badge = "✅ ALL PASSING"
     else:
         status_badge = f"⚠️ {still_failing} STILL FAILING"
@@ -294,11 +301,11 @@ def generate_report(
         else:
             stdout = (initial_report.get("_stdout", "") or "").strip()
             stderr = (initial_report.get("_stderr", "") or "").strip()
-            lines += ["Pytest reported 0 tests. See raw output below:", ""]
+            lines += ["Pytest reported 0 tests. Last part of raw output below:", ""]
             if stdout:
-                lines += ["**stdout:**", "```", stdout[:2000], "```", ""]
+                lines += ["**stdout:**", "```", stdout[-3000:], "```", ""]
             if stderr:
-                lines += ["**stderr:**", "```", stderr[:2000], "```", ""]
+                lines += ["**stderr:**", "```", stderr[-3000:], "```", ""]
 
     # ── Initial failures detail ──────────────────────────────────────────
     if initial_failures:
@@ -450,7 +457,12 @@ def send_telegram(report_path: Path, initial_report: dict, final_report: dict, a
     total = i_pass + i_fail
     fixed = i_fail - f_fail
 
-    status = "✅ ALL PASSING" if f_fail == 0 else f"⚠️ {f_fail} STILL FAILING"
+    if _no_tests_ran(initial_report) and f_fail == 0:
+        status = "🚨 NO TESTS RAN (collection/config error)"
+    elif f_fail == 0:
+        status = "✅ ALL PASSING"
+    else:
+        status = f"⚠️ {f_fail} STILL FAILING"
 
     message = (
         f"<b>🤖 Automated Test Report</b>\n"
@@ -511,14 +523,15 @@ def send_telegram(report_path: Path, initial_report: dict, final_report: dict, a
 # Main cycle
 # ---------------------------------------------------------------------------
 
-async def run_cycle(marker: str | None = None, ai_fix: bool = False, ai_analysis: bool = False) -> Path:
+async def run_cycle(marker: str | None = None, ai_fix: bool = False, ai_analysis: bool = False) -> tuple[Path, bool]:
     """
     Execute one full cycle:
       run → (fix with AI if failures + ai_fix=True) → re-run → report
 
     The report is always generated, regardless of whether AI fixing is enabled
     or whether the API key is present.
-    Returns the path to the generated Markdown report.
+    Returns (report_path, healthy). healthy is False when tests still fail or
+    nothing ran, so callers can exit non-zero and CI turns red.
     """
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     run_dir = TEST_RUNS_DIR / run_id
@@ -600,7 +613,11 @@ async def run_cycle(marker: str | None = None, ai_fix: bool = False, ai_analysis
     print("\n📨 Sending Telegram notification …")
     send_telegram(report_path, initial_report, final_report, analysis=analysis)
 
-    return report_path
+    still_failing = any(
+        t.get("outcome") in ("failed", "error") for t in final_report.get("tests", [])
+    )
+    healthy = not still_failing and not _no_tests_ran(initial_report)
+    return report_path, healthy
 
 
 # ---------------------------------------------------------------------------
@@ -645,7 +662,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    async def _run() -> Path:
+    async def _run() -> tuple[Path, bool]:
         return await run_cycle(marker=args.marker, ai_fix=args.ai_fix, ai_analysis=args.ai_analysis)
 
     if args.schedule:
@@ -653,7 +670,7 @@ def main() -> None:
         print(f"⏰  Scheduler active — interval: {args.interval_hours}h  (Ctrl-C to stop)")
         while True:
             try:
-                report = anyio.run(_run)
+                report, _ok = anyio.run(_run)
                 next_run = datetime.fromtimestamp(time.time() + interval_sec)
                 print(f"\n✅  Cycle complete — next run at {next_run.strftime('%Y-%m-%d %H:%M:%S')}")
                 print(f"   Report: {report}")
@@ -664,8 +681,9 @@ def main() -> None:
                 print(f"\n❌  Cycle error: {exc}")
             time.sleep(interval_sec)
     else:
-        report = anyio.run(_run)
-        print(f"\n✅  Done!  Report → {report}")
+        report, ok = anyio.run(_run)
+        print(f"\n{'✅' if ok else '❌'}  Done!  Report → {report}")
+        sys.exit(0 if ok else 1)
 
 
 if __name__ == "__main__":

@@ -131,8 +131,6 @@ jobs:
           retention-days: 30
 
       # ── 8. Commit the Markdown report back to the repo ────────────────────────
-      #    This makes reports browsable directly on GitHub without downloading
-      #    an artifact zip.
       - name: Commit report to repository
         if: always()
         run: |
@@ -142,8 +140,6 @@ jobs:
           # Only add the reports directory; test_runs/ is intentionally excluded
           git add reports/ || true
 
-          # If nothing changed (all tests already passed and report is identical),
-          # skip the commit gracefully
           if git diff --cached --quiet; then
             echo "No new report to commit."
           else
@@ -151,4 +147,20 @@ jobs:
             LABEL=${MARKER:+"-m $MARKER"}
             git commit -m "chore: automated test report $(date -u '+%Y-%m-%d %H:%M UTC') $LABEL [skip ci]"
             git push origin HEAD:${{ github.ref_name }}
+          fi
+
+      # ── 9. Preserve AI fixes (never lost with the runner, never pushed to main) ─
+      #    Fixes are pushed to a separate branch for human review.
+      - name: Push AI fixes to a review branch
+        if: always() && github.event.inputs.ai_fix == 'true'
+        run: |
+          git add test_cases page_objects workflows configuration utilities || true
+          if git diff --cached --quiet; then
+            echo "No AI code changes to preserve."
+          else
+            BRANCH="ai-fix/$(date -u '+%Y%m%d-%H%M%S')"
+            git checkout -b "$BRANCH"
+            git commit -m "fix: AI-proposed test fixes from automated run $(date -u '+%Y-%m-%d %H:%M UTC') [skip ci]"
+            git push origin "$BRANCH"
+            echo "Pushed AI fixes to $BRANCH — review before merging."
           fi

@@ -91,10 +91,9 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     try:
         parser.addoption("--output-dir", action="store", default=None)
     except: pass
-    try:
-        parser.addoption("--base-url", action="store", default=None)
-    except:
-        pass
+    # NOTE: --base-url is provided by pytest-playwright / pytest-base-url.
+    # Registering it here too raises an argparse conflict at parse time
+    # (not catchable by try/except) with pytest-playwright>=0.10.
     try:
         parser.addoption("--lo-trace", action="store", default=None,  choices=["off", "on", "retain-on-failure"], )
     except:
